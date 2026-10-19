@@ -28,8 +28,6 @@ jobs:
           path: base
 
       - uses: infracost/actions/diff@v4
-        env:
-            INFRACOST_CLI_AUTHENTICATION_TOKEN: ${{ secrets.INFRACOST_API_KEY }}
         with:
           api-key: ${{ secrets.INFRACOST_API_KEY }}
           base-path: base/infra
@@ -41,8 +39,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: infracost/actions/scan@v4
-        env:
-            INFRACOST_CLI_AUTHENTICATION_TOKEN: ${{ secrets.INFRACOST_API_KEY }}
         with:
           api-key: ${{ secrets.INFRACOST_API_KEY }}
           path: infra
