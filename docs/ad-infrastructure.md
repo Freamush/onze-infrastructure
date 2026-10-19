@@ -2,7 +2,7 @@
 
 **Domain:** `onze.internal`
 
-
+<br>
 ### Machines
 
 **DC:** Windows Server 2025 domain controller providing Active Directory, DNS, Kerberos authentication and Group Policy.
@@ -17,8 +17,8 @@
 
 **OPNsense:** Firewall and router providing LAN access control, NAT and network filtering.
 
-
-
+<br>
+<br>
 ### Network
 
 **Domain and LAN:** `onze.internal` on `10.10.10.0/24`, using VMware VMnet2 (host-only, DHCP disabled).
@@ -29,6 +29,8 @@
 
 **Tailscale:** DC advertises `10.10.10.10/32` for remote access to the domain controller.
 
+<br>
+<br>
 ### Active Directory Groups
 
 **Directory structure:** `OU=Accounts` with Employees, Administrators and Service Accounts, plus `OU=Groups`, `OU=Workstations` and `OU=Domain Controllers`.
@@ -42,8 +44,8 @@
 
 **Administrative tiers:** Tier 0 for Active Directory, Tier 1 for servers and Tier 2 for workstations. Separate administrator accounts are used for each tier.
 
-
-
+<br>
+<br>
 ### Users
 
 - **`j.vermeulen`:** Jan Vermeulen, employee and developer using PC01.
@@ -55,9 +57,8 @@
 - **`adm.ad.mjanssens`:** Milan Janssens's separate Tier 0 Active Directory administration account.
 - **`Administrator`:** Built-in domain administrator for domain controller and Active Directory management.
 
-
-
-
+<br>
+<br>
 ### Group Policies (GPO)
 
 Workstation policies apply to `OU=Workstations`. Domain controller policies apply to `OU=Domain Controllers`.
@@ -70,9 +71,8 @@ Workstation policies apply to `OU=Workstations`. Domain controller policies appl
 - **DC - Logging:** Enables PowerShell Script Block Logging and command-line details for process creation.
 - **DC - Security Audit:** Audits authentication, Kerberos activity, account and group management, process creation, security policy changes, directory changes and system integrity.
 
-
-
-
+<br>
+<br>
 ### Collected Logs
 
 #### DC: Domain Controller
@@ -104,7 +104,7 @@ Windows Event Logs include Security, System, Application, Directory Service, DNS
 - `19`, `20`, `21`: WMI persistence activity.
 - `22`, `25`, `29`: DNS queries, process tampering and executable file creation.
 
-
+<br>
 #### PC01 and PC02: Windows Workstations
 
 Both workstations use the same Windows Security, System, Application, PowerShell and Sysmon logging approach.
@@ -131,7 +131,7 @@ Both workstations use the same Windows Security, System, Application, PowerShell
 - `19`, `20`, `21`: WMI persistence activity.
 - `22`, `25`, `29`: DNS queries, process tampering and executable file creation.
 
-
+<br>
 #### DEV01: Ubuntu Developer Workstation
 
 Linux logging covers authentication, command execution, privilege use and system changes. These records use syslog and auditd event types rather than Windows Event IDs.
@@ -142,7 +142,7 @@ Linux logging covers authentication, command execution, privilege use and system
 - **Persistence:** Changes to cron jobs and systemd services.
 - **System security:** Changes to firewall rules, audit settings, network configuration, time settings and kernel modules.
 
-
+<br>
 #### OPNsense: Firewall
 
 OPNsense provides network and system logs through syslog.
