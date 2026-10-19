@@ -70,6 +70,7 @@ locals {
   bastion_subnet_cidr = cidrsubnet(var.HUB-IP-CIDR, 10, 0)
 }
 
+
 locals {
   tags = {
     project = "landing-zone"
