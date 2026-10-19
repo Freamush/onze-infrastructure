@@ -2,7 +2,7 @@ resource "azurerm_monitor_data_collection_rule" "data_collection_rule" {
   name                = "dcr-${var.name}"
   location            = var.location
   resource_group_name = var.rg_name
-  
+
 
   destinations {
     log_analytics {
@@ -32,5 +32,5 @@ resource "azurerm_monitor_data_collection_rule_association" "dcra" {
   name                    = "${var.name}-association"
   target_resource_id      = var.target_machine_id
   data_collection_rule_id = azurerm_monitor_data_collection_rule.data_collection_rule.id
-  
+
 }

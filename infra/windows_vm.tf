@@ -36,6 +36,8 @@ resource "azurerm_virtual_machine_extension" "ama" {
 }
 
 resource "azurerm_windows_virtual_machine" "vm_spoke3" {
+  #checkov:skip=CKV_AZURE_151: Encryption at host not enabled in lab
+  #checkov:skip=CKV_AZURE_50: Extensions required for Azure Monitor Agent (DCR) and Arc
   name                = "win-workstation"
   resource_group_name = azurerm_resource_group.Secure-Landing-Zone-IaC.name
   location            = azurerm_resource_group.Secure-Landing-Zone-IaC.location
