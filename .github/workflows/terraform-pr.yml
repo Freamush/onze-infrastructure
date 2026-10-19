@@ -1,10 +1,11 @@
 name: Terraform Code Check
-on: 
-  pull_request: 
-    paths: ['infra/**.tf', "infra/.terraform.lock.hcl"]
-  push: 
+on:
+  workflow_dispatch:
+  pull_request:
+    paths: ['infra/**', '.github/workflows/terraform-pr.yml']
+  push:
     branches: [main]
-    paths: ['infra/**.tf', "infra/.terraform.lock.hcl"]
+    paths: ['infra/**', '.github/workflows/terraform-pr.yml']
 defaults:
   run:
     working-directory: ./infra
