@@ -3,6 +3,7 @@
 **Domain:** `onze.internal`
 
 <br>
+
 ### Machines
 
 **DC:** Windows Server 2025 domain controller providing Active Directory, DNS, Kerberos authentication and Group Policy.
@@ -19,6 +20,7 @@
 
 <br>
 <br>
+
 ### Network
 
 **Domain and LAN:** `onze.internal` on `10.10.10.0/24`, using VMware VMnet2 (host-only, DHCP disabled).
@@ -31,6 +33,7 @@
 
 <br>
 <br>
+
 ### Active Directory Groups
 
 **Directory structure:** `OU=Accounts` with Employees, Administrators and Service Accounts, plus `OU=Groups`, `OU=Workstations` and `OU=Domain Controllers`.
@@ -46,6 +49,7 @@
 
 <br>
 <br>
+
 ### Users
 
 - **`j.vermeulen`:** Jan Vermeulen, employee and developer using PC01.
@@ -59,6 +63,7 @@
 
 <br>
 <br>
+
 ### Group Policies (GPO)
 
 Workstation policies apply to `OU=Workstations`. Domain controller policies apply to `OU=Domain Controllers`.
@@ -73,6 +78,7 @@ Workstation policies apply to `OU=Workstations`. Domain controller policies appl
 
 <br>
 <br>
+
 ### Collected Logs
 
 #### DC: Domain Controller
@@ -105,6 +111,7 @@ Windows Event Logs include Security, System, Application, Directory Service, DNS
 - `22`, `25`, `29`: DNS queries, process tampering and executable file creation.
 
 <br>
+
 #### PC01 and PC02: Windows Workstations
 
 Both workstations use the same Windows Security, System, Application, PowerShell and Sysmon logging approach.
@@ -132,6 +139,7 @@ Both workstations use the same Windows Security, System, Application, PowerShell
 - `22`, `25`, `29`: DNS queries, process tampering and executable file creation.
 
 <br>
+
 #### DEV01: Ubuntu Developer Workstation
 
 Linux logging covers authentication, command execution, privilege use and system changes. These records use syslog and auditd event types rather than Windows Event IDs.
@@ -143,6 +151,7 @@ Linux logging covers authentication, command execution, privilege use and system
 - **System security:** Changes to firewall rules, audit settings, network configuration, time settings and kernel modules.
 
 <br>
+
 #### OPNsense: Firewall
 
 OPNsense provides network and system logs through syslog.
