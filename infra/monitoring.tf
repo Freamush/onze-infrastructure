@@ -111,7 +111,7 @@ module "windows_dcr" {
   log_space_name    = azurerm_log_analytics_workspace.log_space.name
   log_space_id      = azurerm_log_analytics_workspace.log_space.id
   target_machine_id = each.value
-  tags = local.tags
+  tags              = local.tags
 
   depends_on = [
     azurerm_virtual_machine_extension.ama,
@@ -138,7 +138,7 @@ module "linux_dcr" {
   log_space_name    = azurerm_log_analytics_workspace.log_space.name
   log_space_id      = azurerm_log_analytics_workspace.log_space.id
   target_machine_id = each.value
-  tags = local.tags
+  tags              = local.tags
 
   depends_on = [
     azurerm_arc_machine_extension.arc_ama_ubuntu,
