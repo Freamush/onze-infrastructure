@@ -1,4 +1,4 @@
-# Onze - Local Infrastructure
+# Onze - On-premises Architecture
 
 **Domain:** `onze.internal`
 
