@@ -103,3 +103,10 @@ resource "azurerm_private_dns_zone" "backups-zone" {
 }
 
 
+resource "azurerm_public_ip" "cost_test" {
+  name                = "pip-cost-test"
+  resource_group_name = azurerm_resource_group.Secure-Landing-Zone-IaC.name
+  location            = azurerm_resource_group.Secure-Landing-Zone-IaC.location
+  allocation_method   = "Static"
+  sku                 = "Standard"
+}
