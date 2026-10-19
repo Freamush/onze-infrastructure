@@ -27,8 +27,8 @@ jobs:
       
       - name: Checkov
         id: checkov
-        uses: bridgecrewio/checkov-action@v12.1347.0
+        uses: bridgecrewio/checkov-action@v12
         with:
-          soft_fail: true
           framework: terraform
           directory: ./infra
+
