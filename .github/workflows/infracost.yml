@@ -29,11 +29,15 @@ jobs:
           path: base
 
       - uses: infracost/actions/diff@v4
+        env:
+          INFRACOST_CLI_LOG_LEVEL: debug
         with:
           api-key: ${{ secrets.INFRACOST_API_KEY }}
           base-path: base/infra
           head-path: head/infra
   scan:
+    env:
+      INFRACOST_CLI_LOG_LEVEL: debug
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
