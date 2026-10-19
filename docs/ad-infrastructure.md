@@ -7,6 +7,8 @@
 
 **DC:** Windows Server 2025 domain controller providing Active Directory, DNS, Kerberos authentication and Group Policy.
 
+**ENTRA-CONNECTOR:** Windows Server 2025 that synchronizes with Azure using Entra Connect.
+
 **PC01:** Windows 11 employee workstation.
 
 **PC02:** Windows 11 IT administration workstation.
