@@ -1,0 +1,6 @@
+// T1595
+AppServiceHTTPLogs
+| where TimeGenerated > ago(15m) and ScStatus between (400 .. 499)
+| where isnotempty(CIp)
+| summarize Errors=count(), DistinctPaths=dcount(CsUriStem), TimeGenerated=max(TimeGenerated) by CIp, _ResourceId
+| where Errors >= 30 and DistinctPaths >= 12

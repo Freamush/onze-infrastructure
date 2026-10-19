@@ -1,0 +1,15 @@
+// T1484.001
+let W = union isfuzzy=true
+    (SecurityEvent
+     | where TimeGenerated > ago(15m) and EventID in (5136,5137,5141)
+     | project TimeGenerated, Computer, EventID, Raw=tostring(EventData), M=pack_all()),
+    (Event
+     | where TimeGenerated > ago(15m) and EventLog =~ 'Security' and EventID in (5136,5137,5141)
+     | project TimeGenerated, Computer, EventID, Raw=tostring(EventData), M=pack_all());
+W
+| extend
+    ObjectDN=coalesce(tostring(M.ObjectDN), extract(@'<Data Name="ObjectDN">([^<]*)', 1, Raw)),
+    SubjectUserName=coalesce(tostring(M.SubjectUserName), extract(@'<Data Name="SubjectUserName">([^<]*)', 1, Raw)),
+    AttributeLDAPDisplayName=coalesce(tostring(M.AttributeLDAPDisplayName), extract(@'<Data Name="AttributeLDAPDisplayName">([^<]*)', 1, Raw))
+| where ObjectDN contains 'CN=Policies,CN=System' or Raw contains 'CN=Policies,CN=System'
+| project TimeGenerated, Computer, EventID, ObjectDN, AttributeLDAPDisplayName, SubjectUserName

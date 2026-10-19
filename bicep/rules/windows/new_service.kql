@@ -1,0 +1,6 @@
+// T1543.003
+Event
+| where TimeGenerated > ago(15m) and EventLog =~ 'System' and EventID == 7045
+| extend ServiceName=extract(@'<Data Name="ServiceName">([^<]*)',1,EventData)
+| extend ServiceFileName=extract(@'<Data Name="ImagePath">([^<]*)',1,EventData)
+| project TimeGenerated, Computer, ServiceName, ServiceFileName, RenderedDescription

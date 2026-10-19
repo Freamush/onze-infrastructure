@@ -1,0 +1,9 @@
+// T1562
+let ExpectedHosts=datatable(HostName:string)['DC-ENTRA','WIN-WORKSTATION','VM-SPOKE1'];
+let Live=Heartbeat
+| where TimeGenerated > ago(1h)
+| extend HostName=toupper(tostring(split(Computer,'.')[0]))
+| summarize by HostName;
+ExpectedHosts
+| join kind=leftanti Live on HostName
+| extend TimeGenerated=now()

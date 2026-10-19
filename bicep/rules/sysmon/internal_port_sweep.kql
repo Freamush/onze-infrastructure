@@ -1,0 +1,14 @@
+// T1046
+let S = Event
+| where TimeGenerated > ago(15m) and EventID in (3)
+| where Source =~ 'Microsoft-Windows-Sysmon'
+| extend X=parse_xml(EventData).DataItem.EventData.Data
+| mv-expand X
+| extend Key=tostring(X['@Name']), Value=tostring(X['#text'])
+| summarize F=make_bag(pack(Key,Value)) by TimeGenerated, Computer, EventID, EventData;
+S
+| extend SrcIP=tostring(F.SourceIp), DstIP=tostring(F.DestinationIp), Port=toint(F.DestinationPort), Image=tostring(F.Image)
+| where ipv4_is_private(DstIP) == true and isnotnull(Port)
+| summarize Connections=count(), DistinctPorts=dcount(Port), Ports=make_set(Port,40),
+            TimeGenerated=max(TimeGenerated) by Computer, SrcIP, DstIP, Image
+| where DistinctPorts >= 10

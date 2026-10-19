@@ -1,0 +1,14 @@
+// T1046
+Syslog
+| where TimeGenerated > ago(15m)
+| where ProcessName =~ 'filterlog' or SyslogMessage contains 'filterlog'
+| extend Packet=extract(@'(\d+,[^,]*,[^,]*,[^,]*,[^,]*,[^,]*,(?:block|reject),(?:in|out),4,[^\r\n]*)',1,SyslogMessage)
+| where isnotempty(Packet)
+| extend F=split(Packet,',')
+| where array_length(F) >= 22
+| extend Action=tostring(F[6]), Proto=tostring(F[16]), SrcIP=tostring(F[18]), DstIP=tostring(F[19]), DstPort=toint(F[21])
+| where Action in ('block','reject') and Proto =~ 'tcp' and isnotnull(DstPort)
+| where isnotempty(SrcIP) and isnotempty(DstIP)
+| summarize DistinctPorts=dcount(DstPort), Blocks=count(), Ports=make_set(DstPort,50), TimeGenerated=max(TimeGenerated)
+    by Computer, SrcIP, DstIP
+| where DistinctPorts >= 10

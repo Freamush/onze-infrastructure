@@ -1,0 +1,20 @@
+// T1110.001
+let W = union isfuzzy=true
+    (SecurityEvent
+     | where TimeGenerated > ago(15m) and EventID in (4625)
+     | project TimeGenerated, Computer, EventID, Raw=tostring(EventData), M=pack_all()),
+    (Event
+     | where TimeGenerated > ago(15m) and EventLog =~ 'Security' and EventID in (4625)
+     | project TimeGenerated, Computer, EventID, Raw=tostring(EventData), M=pack_all());
+W
+| extend
+    TargetUserName=coalesce(tostring(M.TargetUserName), extract(@'<Data Name="TargetUserName">([^<]*)', 1, Raw)),
+    IpAddress=coalesce(tostring(M.IpAddress), tostring(M.ClientAddress), extract(@'<Data Name="IpAddress">([^<]*)', 1, Raw), extract(@'<Data Name="ClientAddress">([^<]*)', 1, Raw)),
+    LogonTypeText=coalesce(tostring(M.LogonType), extract(@'<Data Name="LogonType">([^<]*)', 1, Raw))
+| extend LogonType=toint(LogonTypeText)
+| where LogonType in (3,10) and isnotempty(TargetUserName)
+| where isnotempty(IpAddress) and IpAddress !in ('-','127.0.0.1','::1')
+| where TargetUserName !endswith '$'
+| summarize FailedAttempts=count(), FirstSeen=min(TimeGenerated), TimeGenerated=max(TimeGenerated)
+    by Computer, IpAddress, TargetUserName
+| where FailedAttempts >= 8

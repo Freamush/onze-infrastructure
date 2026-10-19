@@ -1,0 +1,15 @@
+// T1490
+let S = Event
+| where TimeGenerated > ago(15m) and EventID in (1)
+| where Source =~ 'Microsoft-Windows-Sysmon'
+| extend X=parse_xml(EventData).DataItem.EventData.Data
+| mv-expand X
+| extend Key=tostring(X['@Name']), Value=tostring(X['#text'])
+| summarize F=make_bag(pack(Key,Value)) by TimeGenerated, Computer, EventID, EventData;
+S
+| extend Image=tostring(F.Image), Cmd=tostring(F.CommandLine), User=tostring(F.User)
+| where (Image endswith @'\vssadmin.exe' and Cmd contains 'delete' and Cmd contains 'shadows')
+    or (Image endswith @'\wbadmin.exe' and Cmd contains 'delete')
+    or (Image endswith @'\bcdedit.exe' and Cmd contains 'recoveryenabled' and Cmd contains 'no')
+    or (Image endswith @'\wmic.exe' and Cmd contains 'shadowcopy' and Cmd contains 'delete')
+| project TimeGenerated, Computer, User, Image, Cmd

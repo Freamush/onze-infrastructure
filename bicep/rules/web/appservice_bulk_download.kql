@@ -1,0 +1,8 @@
+// T1041
+AppServiceHTTPLogs
+| where TimeGenerated > ago(15m) and ScStatus between (200 .. 299)
+| where isnotempty(CIp)
+| summarize Responses=count(), BytesSent=sum(tolong(ScBytes)), UniquePaths=dcount(CsUriStem),
+            TimeGenerated=max(TimeGenerated) by CIp, _ResourceId
+| where BytesSent > 100000000 and Responses >= 10
+| extend MegabytesSent=round(BytesSent/1000000.0,1)

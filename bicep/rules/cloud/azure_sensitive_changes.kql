@@ -1,0 +1,10 @@
+// T1562.001
+AzureActivity
+| where TimeGenerated > ago(15m)
+| where ActivityStatusValue in~ ('Succeeded','Success')
+| where OperationNameValue in~ (
+    'MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/WRITE',
+    'MICROSOFT.INSIGHTS/DIAGNOSTICSETTINGS/DELETE',
+    'MICROSOFT.OPERATIONALINSIGHTS/WORKSPACES/DELETE',
+    'MICROSOFT.WEB/SITES/CONFIG/WRITE')
+| project TimeGenerated, Caller, CallerIpAddress, ResourceGroup, OperationNameValue, ResourceId, ActivityStatusValue

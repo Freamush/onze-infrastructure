@@ -1,0 +1,8 @@
+// T1098.003
+AuditLogs
+| where TimeGenerated > ago(15m)
+| where Result =~ 'success'
+| where ActivityDisplayName contains 'role' and
+    (ActivityDisplayName startswith 'Add member' or ActivityDisplayName startswith 'Add eligible member'
+     or ActivityDisplayName startswith 'Activate eligible' or ActivityDisplayName startswith 'Add scoped member')
+| project TimeGenerated, ActivityDisplayName, InitiatedBy, TargetResources, Result
