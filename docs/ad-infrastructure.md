@@ -2,7 +2,7 @@
 
 **Domain:** `onze.internal`
 
-### 1. Machines
+### Machines
 
 **DC:** Windows Server 2025 domain controller providing Active Directory, DNS, Kerberos authentication and Group Policy.
 
@@ -14,7 +14,7 @@
 
 **OPNsense:** Firewall and router providing LAN access control, NAT and network filtering.
 
-### 2. Network
+### Network
 
 **Domain and LAN:** `onze.internal` on `10.10.10.0/24`, using VMware VMnet2 (host-only, DHCP disabled).
 
@@ -24,7 +24,7 @@
 
 **Tailscale:** DC advertises `10.10.10.10/32` for remote access to the domain controller.
 
-### 3. Active Directory Groups
+### Active Directory Groups
 
 **Directory structure:** `OU=Accounts` with Employees, Administrators and Service Accounts, plus `OU=Groups`, `OU=Workstations` and `OU=Domain Controllers`.
 
@@ -37,7 +37,7 @@
 
 **Administrative tiers:** Tier 0 for Active Directory, Tier 1 for servers and Tier 2 for workstations. Separate administrator accounts are used for each tier.
 
-### 4. Users
+### Users
 
 - **`j.vermeulen`:** Jan Vermeulen, employee and developer using PC01.
 - **`l.peeters`:** Lena Peeters, developer using DEV01 and associated with `GG-Developers`.
@@ -48,7 +48,7 @@
 - **`adm.ad.mjanssens`:** Milan Janssens's separate Tier 0 Active Directory administration account.
 - **`Administrator`:** Built-in domain administrator for domain controller and Active Directory management.
 
-### 5. Group Policies (GPO)
+### Group Policies (GPO)
 
 Workstation policies apply to `OU=Workstations`. Domain controller policies apply to `OU=Domain Controllers`.
 
@@ -60,7 +60,7 @@ Workstation policies apply to `OU=Workstations`. Domain controller policies appl
 - **DC - Logging:** Enables PowerShell Script Block Logging and command-line details for process creation.
 - **DC - Security Audit:** Audits authentication, Kerberos activity, account and group management, process creation, security policy changes, directory changes and system integrity.
 
-### 6. Collected Logs
+### Collected Logs
 
 #### DC: Domain Controller
 
