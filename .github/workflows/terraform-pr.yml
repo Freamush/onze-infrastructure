@@ -1,34 +1,78 @@
-name: Terraform Code Check
+name: Terraform PR
+
 on:
   workflow_dispatch:
   pull_request:
-    paths: ['infra/**', '.github/workflows/terraform-pr.yml']
-  push:
-    branches: [main]
-    paths: ['infra/**', '.github/workflows/terraform-pr.yml']
+    paths: ['infra/**', '.github/workflows/terraform-*.yml']
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+concurrency:
+  group: terraform-plan-${{ github.ref }}
+  cancel-in-progress: true
+
 defaults:
   run:
     working-directory: ./infra
+
+env:
+  TF_VERSION: "1.12.0"
+  TF_IN_AUTOMATION: "true"
+  ARM_USE_OIDC: "true"
+  ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+  TF_VAR_username: ${{ secrets.USERNAME }}
+  TF_VAR_username2: ${{ secrets.USERNAME2 }}
+  TF_VAR_ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
+  TF_VAR_ALERT_EMAIL2: ${{ secrets.ALERT_EMAIL2 }}
+
 jobs:
   terraform-checks:
-    
+    name: Format, validate, Checkov
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Terraform setup 
-        uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.12.0" 
-      - run: terraform fmt -check
-      - run: terraform init -backend=false
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - run: terraform fmt -check -recursive
+      - run: terraform init -backend=false -input=false
       - run: terraform validate
-      
+
       - name: Checkov
-        id: checkov
         uses: bridgecrewio/checkov-action@v12
         with:
           framework: terraform
           directory: ./infra
 
+  plan:
+    name: Plan
+    needs: terraform-checks
+    runs-on: ubuntu-latest
+    env:
+      ARM_CLIENT_ID: ${{ vars.AZURE_PLAN_CLIENT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - run: terraform init -input=false
+
+      - name: Terraform plan
+        run: terraform plan -input=false -lock-timeout=5m -out=.tfplan
+
+      - name: Comment plan on PR
+        uses: borchero/terraform-plan-comment@v2
+        with:
+          token: ${{ github.token }}
+          planfile: .tfplan
+          working-directory: infra
+          skip-comment: ${{ github.event_name != 'pull_request' }}
