@@ -22,7 +22,7 @@ Secure hybrid cloud infrastructure for a fictional company **ONZE**, built entir
 - **Shift-left CI**: Gitleaks, Terraform validation, Checkov and Infracost on every pull request
 
 ## Documentation
-- [On-Prem Architecture](docs/ad-infrastructure.md): active directory, OPNSense, Qwen 3.5 9B
+- [On-Prem Architecture](docs/ad-infrastructure.md): Active Directory, OPNSense, Qwen 3.5 9B
 - [Cloud Architecture](docs/azure-infrastructure.md): machines, network, firewall, backups, identity, Sentinel
 - [CI/CD](docs/gitactions-pipeline.md): pull request workflow and pipeline checks
 
