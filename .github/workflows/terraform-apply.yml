@@ -77,3 +77,13 @@ jobs:
         run: |
           terraform plan -input=false -lock-timeout=5m -out=.tfplan
           terraform apply -input=false -lock-timeout=5m .tfplan
+
+      - name: Send deployment email
+        if: always()
+        env:
+          AZURE_COMMUNICATION_CONNECTION_STRING: ${{ secrets.ACS_CONNECTION_STRING }}
+        run: |
+          az communication email send --sender "${{ vars.MAIL_FROM }}" --to "${{ secrets.ALERT_EMAIL }}" --subject "ONZE deploy: ${{ job.status }}" --text "Commit ${GITHUB_SHA::7} by $GITHUB_ACTOR — $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          az communication email send --sender "${{ vars.MAIL_FROM }}" --to "${{ secrets.ALERT_EMAIL2 }}" --subject "ONZE deploy: ${{ job.status }}" --text "Commit ${GITHUB_SHA::7} by $GITHUB_ACTOR — $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+  
+      
