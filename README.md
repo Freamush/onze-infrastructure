@@ -26,5 +26,9 @@ Secure hybrid cloud infrastructure for a fictional company **ONZE**, built entir
 - [Cloud Architecture](docs/azure-infrastructure.md): machines, network, firewall, backups, identity, Sentinel
 - [CI/CD](docs/gitactions-pipeline.md): pull request workflow and pipeline checks
 
+## Contributors
+Tymur: On-Premises infrastructure, Sentinel, AI analyst Agent
+George: Cloud infrastructure, synchronization with On-Premises, CI/CD
+
 ## Related
 - [Freamush/azure-terraform](https://github.com/Freamush/azure-terraform): base landing zone cloud infrastructure builds on.
