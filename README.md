@@ -28,6 +28,7 @@ Secure hybrid cloud infrastructure for a fictional company **ONZE**, built entir
 
 ## Contributors
 Tymur: On-Premises infrastructure, Sentinel, AI analyst Agent
+
 George: Cloud infrastructure, synchronization with On-Premises, CI/CD
 
 ## Related
