@@ -28,8 +28,8 @@ Secure hybrid cloud infrastructure for a fictional company **ONZE**, built entir
 
 ## Contributors
 ## Contributors
-  - **[Tymur](https://github.com/...)**: on-premises infrastructure, Microsoft Sentinel, AI analyst agent
-  - **[George](https://github.com/...)**: cloud infrastructure, hybrid identity sync, CI/CD
+  - **[Tymur](https://github.com/ttysiachnyi)**: on-premises infrastructure, Microsoft Sentinel, AI analyst agent
+  - **[George](https://github.com/Freamush)**: cloud infrastructure, hybrid identity sync, CI/CD
 
 ## Related
 - [Freamush/azure-terraform](https://github.com/Freamush/azure-terraform): the base landing zone this cloud infrastructure builds on.
