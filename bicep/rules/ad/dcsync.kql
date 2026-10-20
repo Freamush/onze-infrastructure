@@ -12,9 +12,17 @@ W
     Properties=coalesce(tostring(M.Properties), extract(@'<Data Name="Properties">([^<]*)', 1, Raw)),
     AccessMask=coalesce(tostring(M.AccessMask), extract(@'<Data Name="AccessMask">([^<]*)', 1, Raw)),
     ObjectName=coalesce(tostring(M.ObjectName), extract(@'<Data Name="ObjectName">([^<]*)', 1, Raw))
-| where isnotempty(SubjectUserName) and SubjectUserName !endswith '$'
+| where isnotempty(SubjectUserName)
 | where AccessMask in~ ('0x100','0x00000100','256')
 | where Properties contains '1131f6aa-9c07-11d1-f79f-00c04fc2dcd2'
     or Properties contains '1131f6ad-9c07-11d1-f79f-00c04fc2dcd2'
     or Properties contains '89e95b76-444d-4c62-991a-0facbeda640c'
-| project TimeGenerated, Computer, SubjectUserName, AccessMask, ObjectName, Properties
+// ONZE: expected Entra Connect activity on this DC; exact account only.
+// Do not use a broad MSOL_* exception. Allowed identities need separate logon monitoring.
+| where not(Computer =~ 'DC.onze.internal' and SubjectUserName in~ ('MSOL_9a52a6e25cff', 'DC$'))
+// One alert row per unexpected account/domain controller in each query period.
+| summarize EventCount=count(), FirstSeen=min(TimeGenerated), LastSeen=max(TimeGenerated),
+            ObjectNames=make_set(ObjectName, 10), Rights=make_set(Properties, 10)
+    by Computer, SubjectUserName
+| project TimeGenerated=LastSeen, Computer, SubjectUserName,
+          EventCount, FirstSeen, LastSeen, ObjectNames, Rights

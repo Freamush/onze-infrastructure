@@ -780,7 +780,7 @@ resource alertRules 'Microsoft.SecurityInsights/alertRules@2024-03-01' = [for r 
     {
       displayName: r.name
       description: 'Scheduled behavioral detection. Some categories require additional data connectors.'
-      enabled: enableRules
+      enabled: enableRules && r.id != 'scheduled-task-security' && r.id != 'agent-heartbeat-missing'
       severity: r.severity
       tactics: [r.tactic]
       techniques: [split(r.technique, '.')[0]]
@@ -794,7 +794,22 @@ resource alertRules 'Microsoft.SecurityInsights/alertRules@2024-03-01' = [for r 
       eventGroupingSettings: {
         aggregationKind: 'AlertPerResult'
       }
-      incidentConfiguration: {
+      incidentConfiguration: r.id == 'dcsync' ? {
+        createIncident: true
+        groupingConfiguration: {
+          enabled: true
+          reopenClosedIncident: false
+          lookbackDuration: 'P1D'
+          matchingMethod: 'Selected'
+          groupByEntities: [
+            'Account'
+          ]
+          groupByAlertDetails: [
+            'DisplayName'
+          ]
+          groupByCustomDetails: []
+        }
+      } : {
         createIncident: true
       }
     },
