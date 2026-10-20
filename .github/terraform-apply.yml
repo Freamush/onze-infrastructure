@@ -1,0 +1,79 @@
+name: Terraform Apply
+
+on:
+  push:
+    branches: [main]
+    paths: ['infra/**', '.github/workflows/terraform-*.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: terraform-state
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: ./infra
+
+env:
+  TF_VERSION: "1.12.0"
+  TF_IN_AUTOMATION: "true"
+  ARM_USE_OIDC: "true"
+  ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+  TF_VAR_username: ${{ secrets.USERNAME }}
+  TF_VAR_username2: ${{ secrets.USERNAME2 }}
+  TF_VAR_ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
+  TF_VAR_ALERT_EMAIL2: ${{ secrets.ALERT_EMAIL2 }}
+
+jobs:
+  plan:
+    name: Plan
+    runs-on: ubuntu-latest
+    env:
+      ARM_CLIENT_ID: ${{ vars.AZURE_PLAN_CLIENT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - run: terraform init -input=false
+
+      - name: Terraform plan
+        run: terraform plan -input=false -lock-timeout=5m -out=tfplan
+
+      - name: Plan summary for the reviewer
+        uses: borchero/terraform-plan-comment@v2
+        with:
+          token: ${{ github.token }}
+          planfile: tfplan
+          working-directory: infra
+          skip-comment: true
+
+  apply:
+    name: Apply
+    needs: plan
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      ARM_CLIENT_ID: ${{ vars.AZURE_APPLY_CLIENT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - run: terraform init -input=false
+
+      - name: Terraform plan and apply
+        run: |
+          terraform plan -input=false -lock-timeout=5m -out=tfplan
+          terraform apply -input=false -lock-timeout=5m tfplan

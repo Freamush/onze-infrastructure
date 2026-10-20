@@ -7,7 +7,6 @@ variable "HUB-IP-CIDR" {
 variable "username" {
   description = "The name of the VM user"
   type        = string
-  default     = "fream"
 }
 
 variable "username2" {
@@ -89,14 +88,4 @@ variable "ALERT_EMAIL2" {
   description = "action group email"
   type        = string
   sensitive   = true
-}
-
-variable "TENANT_INVITED" {
-  type      = string
-  sensitive = true
-}
-
-variable "PRINCIPAL_INVITED" {
-  type      = string
-  sensitive = true
 }
