@@ -66,6 +66,7 @@ destination_fqdns = [
   "*.digicert.com"
 ]
 ```
+*.microsoft.com is allowed for simplicity in the lab. In production, this would be replaced with Azure Firewall FQDN tags and tenant restrictions.
 
 An Azure Monitor alert rule notifies the action group when more than 5 denied requests are logged within 5 minutes.
 
