@@ -29,6 +29,7 @@ module "spoke1" {
     blob   = azurerm_private_dns_zone.private-zone.id
     backup = azurerm_private_dns_zone.backups-zone.id
   }
+  depends_on = [azurerm_virtual_network.vnet-lz-hub]
 }
 
 module "spoke2" {
@@ -47,6 +48,7 @@ module "spoke2" {
   private_zone_ids = {
     blob = azurerm_private_dns_zone.private-zone.id
   }
+  depends_on = [azurerm_virtual_network.vnet-lz-hub]
 }
 
 
@@ -66,6 +68,7 @@ module "spoke3" {
     blob   = azurerm_private_dns_zone.private-zone.id
     backup = azurerm_private_dns_zone.backups-zone.id
   }
+  depends_on = [azurerm_virtual_network.vnet-lz-hub]
 }
 
 module "spoke4" {
@@ -85,6 +88,7 @@ module "spoke4" {
     blob   = azurerm_private_dns_zone.private-zone.id
     backup = azurerm_private_dns_zone.backups-zone.id
   }
+  depends_on = [azurerm_virtual_network.vnet-lz-hub]
 }
 
 
