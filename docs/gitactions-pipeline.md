@@ -1,4 +1,4 @@
-## CI/CD: GitHub Actions
+# CI/CD: GitHub Actions
 
 Every infrastructure change goes through an automated quality gate and a manual approval before it reaches Azure. The pipeline authenticates with **OIDC federated credentials**, so no long-lived cloud secrets are stored in GitHub.
 
