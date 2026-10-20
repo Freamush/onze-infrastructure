@@ -1,21 +1,23 @@
-name: Terraform Code Check
+name: Terraform PR
+
 on:
   workflow_dispatch:
   pull_request:
-    paths: ['infra/**', '.github/workflows/terraform-pr.yml']
-  push:
-    branches: [main]
-    paths: ['infra/**', '.github/workflows/terraform-pr.yml']
+    paths: ['infra/**', '.github/workflows/terraform-*.yml']
+
 permissions:
-    contents: read
-    id-token: write 
-    pull-requests: write
+  contents: read
+  id-token: write
+  pull-requests: write
+
 concurrency:
-   group: terraform-plan-${{ github.ref }}
-   cancel-in-progress: true  
+  group: terraform-plan-${{ github.ref }}
+  cancel-in-progress: true
+
 defaults:
   run:
     working-directory: ./infra
+
 env:
   TF_VERSION: "1.12.0"
   TF_IN_AUTOMATION: "true"
@@ -32,19 +34,17 @@ jobs:
     name: Format, validate, Checkov
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Terraform setup 
-        uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ env.TF_VERSION }}
+
       - run: terraform fmt -check -recursive
       - run: terraform init -backend=false -input=false
       - run: terraform validate
-      
+
       - name: Checkov
-        id: checkov
         uses: bridgecrewio/checkov-action@v12
         with:
           framework: terraform
@@ -54,7 +54,9 @@ jobs:
     name: Plan
     needs: terraform-checks
     runs-on: ubuntu-latest
-    steps: 
+    env:
+      ARM_CLIENT_ID: ${{ vars.AZURE_PLAN_CLIENT_ID }}
+    steps:
       - uses: actions/checkout@v4
 
       - uses: hashicorp/setup-terraform@v3
@@ -65,16 +67,7 @@ jobs:
       - run: terraform init -input=false
 
       - name: Terraform plan
-        run: | 
-         terraform plan -input=false -no-color -lock-timeout=5m -out=tfplan 
-         terraform show -no-color tfplan > plan.txt
+        run: terraform plan -input=false -lock-timeout=5m -out=tfplan
 
       - name: Comment plan on PR
-        uses: borchero/terraform-plan-comment@v2  
-        with:
-          token: ${{ github.token }}
-          planfile: tfplan
-          working-directory: infra
-          skip-comment: ${{ github.event_name != 'pull_request' }}
-
-        
+        uses: borchero/terraform-plan-comment@v2   # pin to a commit SHA
