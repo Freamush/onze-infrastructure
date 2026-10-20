@@ -46,13 +46,13 @@ jobs:
       - run: terraform init -input=false
 
       - name: Terraform plan
-        run: terraform plan -input=false -lock-timeout=5m -out=tfplan
+        run: terraform plan -input=false -lock-timeout=5m -out=.tfplan
 
       - name: Plan summary for the reviewer
         uses: borchero/terraform-plan-comment@v2
         with:
           token: ${{ github.token }}
-          planfile: tfplan
+          planfile: .tfplan
           working-directory: infra
           skip-comment: true
 
@@ -75,5 +75,5 @@ jobs:
 
       - name: Terraform plan and apply
         run: |
-          terraform plan -input=false -lock-timeout=5m -out=tfplan
-          terraform apply -input=false -lock-timeout=5m tfplan
+          terraform plan -input=false -lock-timeout=5m -out=.tfplan
+          terraform apply -input=false -lock-timeout=5m .tfplan

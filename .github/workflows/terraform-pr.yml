@@ -67,7 +67,12 @@ jobs:
       - run: terraform init -input=false
 
       - name: Terraform plan
-        run: terraform plan -input=false -lock-timeout=5m -out=tfplan
+        run: terraform plan -input=false -lock-timeout=5m -out=.tfplan
 
       - name: Comment plan on PR
-        uses: borchero/terraform-plan-comment@v2   # pin to a commit SHA
+        uses: borchero/terraform-plan-comment@v2
+        with:
+          token: ${{ github.token }}
+          planfile: .tfplan
+          working-directory: infra
+          skip-comment: true
