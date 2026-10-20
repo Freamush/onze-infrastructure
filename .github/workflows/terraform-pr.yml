@@ -75,4 +75,4 @@ jobs:
           token: ${{ github.token }}
           planfile: .tfplan
           working-directory: infra
-          skip-comment: true
+          skip-comment: ${{ github.event_name != 'pull_request' }}
