@@ -85,7 +85,7 @@ resource "azurerm_firewall_policy_rule_collection_group" "fw-rcg" {
         "global.handler.control.monitor.azure.com",
         "${azurerm_log_analytics_workspace.log_space.workspace_id}.ods.opinsights.azure.com",
         "login.microsoftonline.com",
-        "dc.services.visualstudio.com",
+        "dc.services.visualstudio.com"
       ]
       protocols {
         type = "Http"
@@ -110,21 +110,13 @@ resource "azurerm_firewall_policy_rule_collection_group" "fw-rcg" {
         "${azurerm_log_analytics_workspace.log_space.workspace_id}.ods.opinsights.azure.com",
         "dc.services.visualstudio.com",
         "ctldl.windowsupdate.com",
-        "*.microsoft.com"
+        "*.microsoft.com",
+        "*.digicert.com"
       ]
       protocols {
         type = "Https"
         port = 443
       }
-    }
-
-    rule {
-      name             = "allow-entra-vm-login-spoke3"
-      source_addresses = [var.SPOKE3-IP-CIDR]
-      destination_fqdns = [
-        "*.microsoft.com",
-        "*.digicert.com"
-      ]
       protocols {
         type = "Http"
         port = 80
