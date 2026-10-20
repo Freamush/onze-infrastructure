@@ -29,7 +29,6 @@ Secure hybrid cloud infrastructure for a fictional company **ONZE**, built entir
 - [CI/CD](docs/gitactions-pipeline.md): pull request workflow and pipeline checks
 
 ## Contributors
-## Contributors
   - **[Tymur](https://github.com/ttysiachnyi)**: on-premises infrastructure, Microsoft Sentinel, AI analyst agent
   - **[George](https://github.com/Freamush)**: cloud infrastructure, hybrid identity sync, CI/CD
 
