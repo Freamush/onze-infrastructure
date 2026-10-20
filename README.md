@@ -1,6 +1,6 @@
 # ONZE – Secure Hybrid Azure Infrastructure
 
-Secure hybrid cloud infrastructure for a fictional company **ONZE**, built entirely with **Terraform**. It follows the Microsoft Cloud Adoption Framework hub-and-spoke model, connects on-premises **Active Directory** to Microsoft **Entra ID**, ships all logs to **Microsoft Sentinel** and uses self-hosted ** AI analyst agent** powered by **Qwen 3.5 9B**.
+Secure hybrid cloud infrastructure for a fictional company **ONZE**, built entirely with **Terraform**. It follows the Microsoft Cloud Adoption Framework hub-and-spoke model, connects on-premises **Active Directory** to Microsoft **Entra ID**, ships all logs to **Microsoft Sentinel** and uses self-hosted **AI analyst agent** powered by **Qwen 3.5 9B**.
 
 <img width="4282" height="2040" alt="onze" src="https://github.com/user-attachments/assets/aa24fd66-8dc4-4c9f-8ddc-b1eb92a7ef11" />
 
