@@ -135,6 +135,9 @@ resource "azurerm_firewall_policy_rule_collection_group" "fw-rcg" {
         "acrslzonze.azurecr.io",
         "*.blob.core.windows.net",
         "${azurerm_log_analytics_workspace.log_space.workspace_id}.ods.opinsights.azure.com",
+        "swedencentral-shared.prod.warm.ingest.monitor.core.windows.net",
+        "dc.services.visualstudio.com",
+        "*.monitoring.core.windows.net"
       ]
       protocols {
         type = "Https"
