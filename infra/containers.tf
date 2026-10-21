@@ -57,19 +57,19 @@ resource "azurerm_container_app_job" "caj-slz-onze" {
   }
   workload_profile_name = "Consumption"
 
-    identity {
-        type         = "UserAssigned"
-        identity_ids = [data.azurerm_user_assigned_identity.onze-plan-identity.id]
-    }
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [data.azurerm_user_assigned_identity.onze-plan-identity.id]
+  }
 
-    registry {
-        server   = azurerm_container_registry.acr.login_server
-        identity = data.azurerm_user_assigned_identity.onze-plan-identity.id
-    }
+  registry {
+    server   = azurerm_container_registry.acr.login_server
+    identity = data.azurerm_user_assigned_identity.onze-plan-identity.id
+  }
 
-    lifecycle {
-        ignore_changes = [template[0].container[0].image]
-    }
+  lifecycle {
+    ignore_changes = [template[0].container[0].image]
+  }
 
   template {
     container {
