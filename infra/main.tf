@@ -14,6 +14,14 @@ resource "azurerm_resource_group" "Secure-Landing-Zone-Backup" {
   tags     = local.tags
 }
 
+resource "azurerm_resource_group" "Secure-Landing-Zone-Apps" {
+  name     = "Secure-Landing-Zone-Backup"
+  location = azurerm_resource_group.Secure-Landing-Zone-IaC.location
+  tags     = local.tags
+}
+
+
+
 module "spoke1" {
   source              = "./modules/spoke"
   name                = "vnet-lz-spoke1"
@@ -91,6 +99,29 @@ module "spoke4" {
   depends_on = [azurerm_virtual_network.vnet-lz-hub]
 }
 
+module "spoke5" {
+  source                  = "./modules/spoke"
+  name                    = "vnet-lz-spoke5"
+  rg_name                 = azurerm_resource_group.Secure-Landing-Zone-IaC.name
+  location                = azurerm_resource_group.Secure-Landing-Zone-IaC.location
+  hub_id                  = azurerm_virtual_network.vnet-lz-hub.id
+  hub_name                = azurerm_virtual_network.vnet-lz-hub.name
+  vnet_cidr               = var.SPOKE5-IP-CIDR
+  subnet_cidr             = local.subnet6_cird
+  firewall_private_ip     = azurerm_firewall.az-firewall.ip_configuration[0].private_ip_address
+  tags                    = local.tags
+  route_prefix            = "0.0.0.0/0"
+  private_endpoint_policy = "Enabled"
+  private_zone_ids = {
+    blob   = azurerm_private_dns_zone.private-zone.id
+    backup = azurerm_private_dns_zone.backups-zone.id
+  }
+  delegation = {
+    name    = "Microsoft.App/environments"
+    actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
+  }
+  depends_on = [azurerm_virtual_network.vnet-lz-hub]
+}
 
 resource "azurerm_private_dns_zone" "private-zone" {
   name                = "privatelink.blob.core.windows.net"

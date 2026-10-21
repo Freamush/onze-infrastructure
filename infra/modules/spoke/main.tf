@@ -11,6 +11,18 @@ resource "azurerm_subnet" "subnet" {
   virtual_network_name              = azurerm_virtual_network.vnet.name
   address_prefixes                  = [var.subnet_cidr]
   private_endpoint_network_policies = var.private_endpoint_policy
+
+  dynamic "delegation" {
+    for_each = var.delegation == null ? [] : [var.delegation]
+    content {
+      name = "delegation"
+      service_delegation {
+        name    = delegation.value.name
+        actions = delegation.value.actions
+      }
+    }
+  }
+
 }
 resource "azurerm_virtual_network_peering" "hub-to-spoke" {
   name                         = "${var.hub_name}-to-${var.name}"

@@ -42,6 +42,11 @@ variable "SPOKE4-IP-CIDR" {
   default = "172.17.0.0/16"
 }
 
+variable "SPOKE5-IP-CIDR" {
+  type    = string
+  default = "172.18.0.0/16"
+}
+
 variable "VM2-PRIVATE-IP" {
   description = "The private IP address to be used for the VM."
   type        = string
@@ -66,6 +71,7 @@ locals {
   subnet3_cidr        = cidrsubnet(var.SPOKE2-IP-CIDR, 8, 1)
   subnet4_cird        = cidrsubnet(var.SPOKE3-IP-CIDR, 8, 1)
   subnet5_cird        = cidrsubnet(var.SPOKE4-IP-CIDR, 8, 1)
+  subnet6_cird        = cidrsubnet(var.SPOKE5-IP-CIDR, 8, 1)
   bastion_subnet_cidr = cidrsubnet(var.HUB-IP-CIDR, 10, 0)
 }
 
