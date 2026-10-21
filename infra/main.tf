@@ -15,7 +15,7 @@ resource "azurerm_resource_group" "Secure-Landing-Zone-Backup" {
 }
 
 resource "azurerm_resource_group" "Secure-Landing-Zone-Apps" {
-  name     = "Secure-Landing-Zone-Backup"
+  name     = "Secure-Landing-Zone-Apps"
   location = azurerm_resource_group.Secure-Landing-Zone-IaC.location
   tags     = local.tags
 }
