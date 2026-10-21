@@ -24,6 +24,7 @@ class Settings:
     polling_seconds: int = 60
     max_rounds: int = 20
     max_tool_calls: int = 50
+    correlation_queries: int = 2
     max_investigation_seconds: int = 900
     case_writes: bool = False
     create_review_task: bool = False
@@ -59,6 +60,7 @@ class Settings:
             polling_seconds=int(os.getenv("POLL_SECONDS", "60")),
             max_rounds=int(os.getenv("MAX_ROUNDS", "20")),
             max_tool_calls=int(os.getenv("MAX_TOOL_CALLS", "50")),
+            correlation_queries=int(os.getenv("CORRELATION_QUERIES", "2")),
             max_investigation_seconds=int(os.getenv("MAX_INVESTIGATION_SECONDS", "900")),
             case_writes=enabled("ENABLE_CASE_WRITES"),
             create_review_task=enabled("CREATE_REVIEW_TASK"),
@@ -79,6 +81,8 @@ class Settings:
             raise ValueError("MAX_ROUNDS must be 1..100")
         if not 1 <= s.max_tool_calls <= 500:
             raise ValueError("MAX_TOOL_CALLS must be 1..500")
+        if not 0 <= s.correlation_queries <= 4:
+            raise ValueError("CORRELATION_QUERIES must be 0..4")
         if not 60 <= s.max_investigation_seconds <= 14400:
             raise ValueError("MAX_INVESTIGATION_SECONDS must be 60..14400")
         if not 5 <= s.query_server_timeout <= 300:

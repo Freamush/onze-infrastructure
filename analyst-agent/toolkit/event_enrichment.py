@@ -1,7 +1,7 @@
+import re
 import xml.etree.ElementTree as ET
 
-_FIELDS = {"TaskName", "SubjectUserName", "SubjectDomainName", "SubjectUserSid",
-           "TaskContent", "ClientProcessId", "ParentProcessId"}
+FIELD = re.compile(r"^[A-Za-z][A-Za-z0-9_.:-]{0,79}$")
 
 
 def _local(tag):
@@ -23,10 +23,11 @@ def extract_windows_eventdata(source):
         if _local(el.tag) != "Data":
             continue
         key = el.attrib.get("Name")
-        if key not in _FIELDS:
+        if not key or not FIELD.fullmatch(key) or (key not in result and len(result) >= 64):
             continue
         value = el.text or ""
-        result[key] = value[:250] if key != "TaskContent" else value[:65536]
+        if key not in result:
+            result[key] = value[:65536] if key == "TaskContent" else value[:1000]
     task = result.pop("TaskContent", "")
     if task and task.lstrip().startswith('<'):
         try:

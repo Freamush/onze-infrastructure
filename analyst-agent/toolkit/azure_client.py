@@ -32,12 +32,6 @@ def utc_time(value: str) -> datetime:
     return dt.astimezone(timezone.utc)
 
 
-def has_kql_time_filter(query: str) -> bool:
-
-    return bool(re.search(r"\bTimeGenerated\b\s*(?:between\b|in\b|>=|<=|>|<|==|!=)",
-                          query, re.IGNORECASE))
-
-
 def trim(value, max_len=1800):
     if isinstance(value, str) and len(value) > max_len:
         return value[:max_len] + f" … [field shortened, original {len(value)} characters]"
@@ -115,7 +109,12 @@ class SentinelAPI:
             raise ValueError("Invalid incident severity")
         if not 1 <= limit <= 5000:
             raise ValueError("limit must be 1..5000")
-        params = {"$top": 250}
+        params = {"$top": 250, "$orderby": "properties/lastModifiedTimeUtc desc"}
+        if status != "All":
+            params["$filter"] = f"properties/status eq '{status}'"
+        if severity != "All":
+            condition = f"properties/severity eq '{severity}'"
+            params["$filter"] = f"{params['$filter']} and {condition}" if "$filter" in params else condition
         out = self._page("incidents", params=params, max_items=limit + 1)
         hits = [x for x in out["items"] if
                 (status == "All" or x.get("properties", {}).get("status") == status) and
@@ -204,16 +203,8 @@ class SentinelAPI:
                          f"set truncationmaxsize=4194304;\n{query}")
 
 
-        if start_utc is not None or end_utc is not None:
-
-            sdk_timespan = self._timespan(hours, start_utc, end_utc)
-        elif has_kql_time_filter(query):
-
-
-            self._timespan(hours)
-            sdk_timespan = None
-        else:
-            sdk_timespan = self._timespan(hours)
+        # Always enforce an API timespan. KQL time clauses can only narrow it.
+        sdk_timespan = self._timespan(hours, start_utc, end_utc)
         result = self.logs.query_workspace(
             self.settings.workspace_id, bounded_query,
             timespan=sdk_timespan,

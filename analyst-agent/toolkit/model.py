@@ -38,11 +38,11 @@ class ModelClient:
             pass
 
 
-    def _complete(self, messages, *, tools=None, max_tokens=None):
+    def _complete(self, messages, *, tools=None, tool_choice="auto", max_tokens=None):
         opts = {"model": self.model, "messages": messages, "temperature": 0,
                 "max_tokens": max_tokens or self.settings.llm_output_tokens}
         if tools:
-            opts.update(tools=tools, tool_choice="auto")
+            opts.update(tools=tools, tool_choice=tool_choice)
         else:
             opts.update(tool_choice="none")
         return self.client.chat.completions.create(**opts).choices[0].message

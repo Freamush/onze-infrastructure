@@ -8,7 +8,7 @@ def config(tmp_path, **opts):
     values = dict(subscription_id='aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee',
                   resource_group='r', workspace_name='w', workspace_id='wid',
                   audit_dir=str(tmp_path / 'audit'), max_rounds=10,
-                  max_investigation_seconds=900)
+                  max_investigation_seconds=900, correlation_queries=0)
     values.update(opts)
     return Settings(**values)
 

@@ -47,6 +47,8 @@ class Store:
         if "delivery_status" not in columns:
             self.connection.execute("ALTER TABLE cases ADD COLUMN delivery_status TEXT NOT NULL DEFAULT 'unknown'")
         self.connection.execute("CREATE INDEX IF NOT EXISTS cases_source_idx ON cases(source_signature,created_utc)")
+        self.connection.execute("""CREATE TABLE IF NOT EXISTS incident_versions (
+            incident_id TEXT PRIMARY KEY, modified_utc TEXT NOT NULL)""")
         self.connection.execute("""CREATE TABLE IF NOT EXISTS investigation_failures (
             incident_id TEXT PRIMARY KEY, attempts INTEGER NOT NULL,
             retry_after_utc TEXT NOT NULL, error TEXT NOT NULL)""")
@@ -79,6 +81,20 @@ class Store:
             raise ValueError("Invalid delivery status")
         self.connection.execute("UPDATE cases SET delivery_status=? WHERE signature=?", (status, signature))
         self.connection.commit()
+
+    def seen(self, incident_id, modified_utc):
+        if not modified_utc:
+            return False
+        row = self.connection.execute(
+            "SELECT modified_utc FROM incident_versions WHERE incident_id=?", (incident_id,)).fetchone()
+        return row is not None and row[0] == modified_utc
+
+    def mark_seen(self, incident_id, modified_utc):
+        if modified_utc:
+            self.connection.execute("""INSERT INTO incident_versions (incident_id, modified_utc)
+                VALUES (?, ?) ON CONFLICT(incident_id) DO UPDATE SET modified_utc=excluded.modified_utc""",
+                (incident_id, modified_utc))
+            self.connection.commit()
 
     def can_retry(self, incident_id):
         row = self.connection.execute(
@@ -146,6 +162,9 @@ class IncidentService:
         if props.get("status") == "Closed":
             return {"skipped": "closed"}
         iid = incident["name"]
+        modified = props.get("lastModifiedTimeUtc")
+        if not force and self.store.seen(iid, modified):
+            return {"skipped": "unchanged", "incident": iid}
         if not force and not self.store.can_retry(iid):
             return {"skipped": "retry_backoff", "incident": iid}
         try:
@@ -165,8 +184,11 @@ class IncidentService:
                         (self.settings.case_writes and not last_case["case_written"])):
                     self._deliver(last_case["signature"], incident,
                                   json.loads(last_case["payload"]))
+                    delivery = self.store.delivery_status(last_case["signature"])
+                    if last_case["verdict"] != "inconclusive" and delivery in {"not_required", "delivered"}:
+                        self.store.mark_seen(iid, modified)
                     return {"skipped": "delivery_retried", "incident": iid,
-                            "delivery_status": self.store.delivery_status(last_case["signature"])}
+                            "delivery_status": delivery}
                 if (last_case["verdict"] == "inconclusive" and
                         self.store.rechecks_done(original_sig) < self.settings.max_inconclusive_rechecks and
                         (datetime.now(timezone.utc) -
@@ -183,8 +205,11 @@ class IncidentService:
                             (self.settings.escalation_webhook and not last_case["notified"])):
                         self._deliver(last_case["signature"], incident,
                                       json.loads(last_case["payload"]))
+                    delivery = self.store.delivery_status(last_case["signature"])
+                    if last_case["verdict"] != "inconclusive" and delivery in {"not_required", "delivered"}:
+                        self.store.mark_seen(iid, modified)
                     return {"skipped": "already_processed", "incident": iid,
-                            "delivery_status": self.store.delivery_status(last_case["signature"]),
+                            "delivery_status": delivery,
                             "rechecks_done": self.store.rechecks_done(original_sig)}
             else:
                 sig = original_sig
@@ -195,9 +220,9 @@ class IncidentService:
                 if result.get("retryable_failure"):
                     raise RuntimeError("Investigation incomplete due to a retryable model/review failure")
                 severity = props.get("severity", "Medium")
+                # An analyst-review flag is not by itself a paging/escalation reason.
                 result["escalate"] = (result["verdict"] in {"malicious", "suspicious"} or
-                        (result["verdict"] == "inconclusive" and severity in {"Medium", "High"}) or
-                        (bool(result["needs_human"]) and severity != "Informational"))
+                        (result["verdict"] == "inconclusive" and severity in {"Medium", "High"}))
                 result["incident_id"] = iid
                 result["severity"] = severity
                 result["evidence_receipts"] = receipts
@@ -208,9 +233,10 @@ class IncidentService:
                 result = json.loads(existing["payload"])
             self.store.clear_failure(iid)
             self._deliver(sig, incident, result)
-
-
-            return {**result, "delivery_status": self.store.delivery_status(sig)}
+            delivery = self.store.delivery_status(sig)
+            if result["verdict"] != "inconclusive" and delivery in {"not_required", "delivered"}:
+                self.store.mark_seen(iid, modified)
+            return {**result, "delivery_status": delivery}
         except Exception as exc:
 
 

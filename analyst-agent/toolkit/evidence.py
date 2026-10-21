@@ -8,6 +8,7 @@ import json
 import logging
 import re
 import uuid
+from collections import Counter
 
 from .official_docs import (
     source_reference_excerpts,
@@ -27,6 +28,46 @@ def preview(value, limit):
         return value
     return {"preview_only": True, "original_chars": len(text),
             "preview_json_prefix": text[:limit], "warning": "Result preview; full data is in the evidence archive."}
+
+
+def digest_rows(data, sample=5, cell=160, top=6):
+    """Readable summary of a large KQL result: counts, time span, value frequencies, clean samples.
+
+    Replaces a JSON string cut in the middle of a row, which a small model cannot use.
+    Returns None when `data` is not a list of row dicts.
+    """
+    rows = data.get("rows") if isinstance(data, dict) else None
+    if not isinstance(rows, list) or not rows or not all(isinstance(r, dict) for r in rows[:50]):
+        return None
+
+    def flat(row):
+        parsed = row.get("parsed_event_data") if isinstance(row.get("parsed_event_data"), dict) else {}
+        out = {k: v for k, v in row.items()
+               if k != "parsed_event_data" and not (k == "EventData" and parsed)}
+        for k, v in parsed.items():
+            out.setdefault(k, v)
+        return out
+
+    flat_rows = [flat(r) for r in rows if isinstance(r, dict)]
+    counters = {}
+    for row in flat_rows:
+        for key, value in row.items():
+            if isinstance(value, (dict, list)) or value in (None, ""):
+                continue
+            counters.setdefault(key, Counter())[str(value)[:80]] += 1
+    frequencies = {k: [[v, n] for v, n in c.most_common(top)] for k, c in counters.items()
+                   if 1 < len(c) <= 40 and k not in ("TimeGenerated", "EventData")}
+    times = [str(r["TimeGenerated"]) for r in flat_rows if r.get("TimeGenerated")]
+    digest = {"digest_of_full_result": True,
+              "row_count_in_result": len(rows),
+              "rows_returned": data.get("rows_returned"), "truncated": data.get("truncated"),
+              "value_frequencies": dict(list(frequencies.items())[:10]),
+              "sample_rows": [{k: (v[:cell] if isinstance(v, str) else v) for k, v in list(r.items())[:14]}
+                              for r in flat_rows[:sample]],
+              "note": "Digest of the full result; every row remains in the evidence archive."}
+    if times:
+        digest["time_range_utc"] = {"first": min(times), "last": max(times)}
+    return digest
 
 
 def parse_verdict(text, valid_receipts, successful_kql):
@@ -151,6 +192,37 @@ class EvidenceBoard:
 
 
         return str(query or "").strip()
+
+    @staticmethod
+    def _query_tables(query):
+        """Table names a KQL query reads from (best effort, ignores let-variables)."""
+        clean = re.sub(r"/\*.*?\*/|//[^\n]*", " ", str(query or ""), flags=re.S)
+        clean = re.sub(r"'(?:''|[^'])*'|\"(?:\\.|[^\"])*\"", "''", clean)
+        local = {n.lower() for n in re.findall(r"\blet\s+([A-Za-z][A-Za-z0-9_]*)\s*=", clean, re.I)}
+        names = re.findall(r"(?:^|[;(=])\s*([A-Za-z][A-Za-z0-9_]*)\s*\|", clean, re.M)
+        for union in re.findall(r"\bunion\s+([^|;]+)", clean, re.I):
+            names += [p.strip() for p in union.split(",") if re.fullmatch(r"\s*[A-Za-z][A-Za-z0-9_]*\s*", p)]
+        return list(dict.fromkeys(n for n in names if n.lower() not in local and n.lower() != "let"))
+
+    def known_query_table(self):
+        """True when a schema receipt already exists for every table of the last failed/recent KQL.
+
+        The orchestrator uses it to decide whether another get_table_schema call could
+        still help the model, or whether it should go straight back to writing KQL.
+        """
+        known = {str(m.get("arguments", {}).get("table", "")).lower()
+                 for m in self.executor.receipts.values() if m.get("tool") == "get_table_schema"}
+        if not known:
+            return False
+        query = (self.failed_kql or {}).get("query")
+        if not query:
+            for action in reversed(self.actions):
+                if action.get("tool") == "run_kql":
+                    arguments = action.get("arguments")
+                    query = arguments.get("query") if isinstance(arguments, dict) else None
+                    break
+        tables = self._query_tables(query)
+        return bool(tables) and all(t.lower() in known for t in tables)
 
     def add(self, name, args, data, ref, *, cached=False):
         descriptor = {"tool": name, "arguments": preview(args, 1000),
@@ -290,9 +362,12 @@ class EvidenceBoard:
             else:
                 payload = data
             sample_limit = 6500 if selected_refs and ref in selected_refs else 2600
+            shown = preview(payload, sample_limit)
+            if isinstance(shown, dict) and shown.get("preview_only") and meta["tool"] == "run_kql":
+                shown = digest_rows(data, sample=3, top=4) or shown
             details.append({"ref": ref, "tool": meta["tool"],
                             "arguments": preview(meta["arguments"], 1000),
-                            "rows": meta.get("rows"), "data": preview(payload, sample_limit)})
+                            "rows": meta.get("rows"), "data": shown})
         ctx = self.context
         view = {
             "incident": preview(ctx.get("incident"), 2700),
@@ -335,10 +410,14 @@ class EvidenceBoard:
 
 
         recent_ref = self.last_results[-1] if self.last_results else None
+        digest = None
         if recent_ref:
-            view["last_result"] = {"ref": recent_ref,
-                                   "data": preview(self.executor.results[recent_ref],
-                                                   min(7600, max(1000, max_chars // 3)))}
+            latest = self.executor.results[recent_ref]
+            shown = preview(latest, min(7600, max(1000, max_chars // 3)))
+            if isinstance(shown, dict) and shown.get("preview_only"):
+                digest = digest_rows(latest)
+                shown = digest or shown
+            view["last_result"] = {"ref": recent_ref, "data": shown}
         view["decision"] = {"round": round_no, "max_rounds": max_rounds,
                             "case_status": {
                                 "raw_queries_succeeded": self.executor.primary_telemetry_coverage()["query_count"],
@@ -363,7 +442,7 @@ class EvidenceBoard:
         while len(dump_json(view)) > max_chars and view["selected_evidence"]:
             view["selected_evidence"].pop()
         if len(dump_json(view)) > max_chars and "last_result" in view:
-            view["last_result"]["data"] = preview(self.executor.results[recent_ref], 950)
+            view["last_result"]["data"] = preview(digest or self.executor.results[recent_ref], 950)
         if len(dump_json(view)) > max_chars:
 
 

@@ -1,4 +1,5 @@
 import hashlib
+import subprocess
 from datetime import datetime, timezone, timedelta
 from types import SimpleNamespace
 
@@ -40,7 +41,7 @@ def client(logs):
 def test_kql_time_filter(q):
     logs = Logs()
     client(logs).query_logs(q, hours=1)
-    assert logs.calls[0][2]['timespan'] is None
+    assert logs.calls[0][2]['timespan'] == timedelta(hours=1)
     assert q in logs.calls[0][1]
 
 
@@ -96,8 +97,11 @@ def test_incident_timespan():
     q = 'Event | where TimeGenerated between (datetime(2026-10-19T15:00:00Z) .. datetime(2026-10-19T16:00:00Z))'
     _, ref = w.execute('run_kql', {'query': q})
     assert ref
-    assert api.kwargs == {}
-    assert w.receipts[ref]['arguments'] == {'query': q}
+    assert api.kwargs == {
+        'start_utc': '2026-10-19T15:00:00Z',
+        'end_utc': '2026-10-19T19:00:00Z'
+    }
+    assert w.receipts[ref]['arguments'] == {'query': q, **api.kwargs}
 
 
 def make_test_sources(folder):
@@ -105,7 +109,7 @@ def make_test_sources(folder):
     expected_text = {}
     for key, (_, _, paths) in DOCS.items():
         root = source / key
-        (root / '.git').mkdir(parents=True)
+        subprocess.run(['git', 'init', '-q', str(root)], check=True)
         for path_part in paths:
             (root / path_part).mkdir(parents=True, exist_ok=True)
         directory = root / paths[0]
@@ -116,6 +120,9 @@ def make_test_sources(folder):
             path = directory / f'page-{i}.md'
             path.write_bytes(text.encode())
             expected_text[f'{key}:{path.relative_to(root).as_posix()}'] = text
+        subprocess.run(['git', '-C', str(root), 'add', '.'], check=True)
+        subprocess.run(['git', '-C', str(root), '-c', 'user.name=Test',
+                        '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'fixture'], check=True)
     return expected_text
 
 

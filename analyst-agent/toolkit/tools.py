@@ -2,7 +2,7 @@ import hashlib
 import json
 import re
 from datetime import timedelta, datetime, timezone
-from .azure_client import utc_time, has_kql_time_filter
+from .azure_client import utc_time
 from jsonschema import Draft202012Validator
 from .azure_client import SentinelAPI
 from .official_docs import search_docs, read_doc
@@ -48,7 +48,7 @@ TOOL_SPECS = [
     definition("get_table_activity", "Check whether a Log Analytics table has recent records.",
                {"table": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]{0,127}$"},
                 "hours": {"type": "integer", "minimum": 1, "maximum": 720}}, ["table"]),
-    definition("run_kql", "Run read-only KQL exactly as supplied. Cite a provided documentation ID in docs_used. Check table columns before querying unfamiliar fields. When KQL filters TimeGenerated, hours does not set the API timespan; start_utc and end_utc still apply. Query errors are returned unchanged.",
+    definition("run_kql", "Run read-only KQL. The API time window always applies, even if KQL filters TimeGenerated. Set hours or start_utc/end_utc when searching beyond the incident window. Check table schemas and cite docs when used.",
                {"query": {"type": "string", "minLength": 1, "maxLength": 12000},
                 "hours": {"type": "integer", "minimum": 1, "maximum": 8760},
                 "start_utc": {"type": "string"}, "end_utc": {"type": "string"},
@@ -62,9 +62,11 @@ TOOL_SPECS = [
                 "limit": {"type": "integer", "minimum": 1, "maximum": 20},
                 "max_chars": {"type": "integer", "minimum": 500, "maximum": 12000}}, ["receipt"]),
 
-    definition("search_official_docs", "Search locally indexed Microsoft KQL, Azure Monitor and Windows Server documentation, and Sentinel rule examples. Returns excerpts and source URLs.",
+    definition("search_official_docs",
+               "Search official Microsoft documentation: KQL, Azure Monitor, Sentinel, Windows Security Auditing and Sysinternals/Sysmon. Returns excerpts and source URLs.",
                {"query": {"type": "string", "minLength": 1, "maxLength": 240},
-                "collection": {"type": "string", "enum": ["all", "kql", "azure-monitor", "sentinel", "windows-server"]},
+                "collection": {"type": "string",
+                               "enum": ["all", "kql", "azure-monitor", "sentinel", "windows-server", "sysinternals"]},
                 "limit": {"type": "integer", "minimum": 1, "maximum": 15}}, ["query"]),
     definition("read_official_doc", "Read a source document by ID, with pagination and optional focus. Returns text, URL and SHA256.",
                {"doc_id": {"type": "string", "minLength": 1, "maxLength": 1200},
@@ -77,6 +79,10 @@ TOOL_SPECS = [
 ]
 
 SCHEMAS = {x["function"]["name"]: x for x in TOOL_SPECS}
+
+
+def utc_iso(value):
+    return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
 def incident_window(incident, alerts, pad_hours=2):
@@ -125,6 +131,62 @@ class ToolExecutor:
         self.retryable_tool_failures = []
         self.successful_log_queries = 0
         self.alert_ids = set()
+
+    _BETWEEN = re.compile(r"\bbetween\s*\(\s*datetime\(\s*([^)]+?)\s*\)\s*\.\.\s*datetime\(\s*([^)]+?)\s*\)\s*\)", re.I)
+
+    @staticmethod
+    def _kql_datetime(text):
+        """Parse a KQL datetime literal (UTC unless stated otherwise); None if unparseable."""
+        try:
+            dt = datetime.fromisoformat(str(text).strip().replace("Z", "+00:00"))
+        except ValueError:
+            return None
+        return dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt.astimezone(timezone.utc)
+
+    def _normalize_kql_args(self, args):
+        """Make run_kql arguments valid instead of failing on avoidable model mistakes.
+
+        * max_rows / hours above the configured limits are clamped (the tool schema
+          advertises larger maxima than the configuration accepts).
+        * Relative `hours` counts back from NOW and silently hides historical events;
+          when the query itself has an explicit between (datetime(..) .. datetime(..))
+          window, that window becomes the API timespan.
+        * A lone start_utc or end_utc is completed; an end in the future is clamped to now.
+        """
+        cfg = getattr(self.api, "settings", None)
+        out = dict(args)
+        max_rows = getattr(cfg, "query_max_rows", None)
+        if max_rows and isinstance(out.get("max_rows"), int) and out["max_rows"] > max_rows:
+            out["max_rows"] = max_rows
+        absolute = "start_utc" in out or "end_utc" in out
+        if not absolute and "hours" in out:
+            match = self._BETWEEN.search(str(out.get("query", "")))
+            if match:
+                lo, hi = self._kql_datetime(match.group(1)), self._kql_datetime(match.group(2))
+                if lo and hi and lo < hi:
+                    out.pop("hours")
+                    out["start_utc"] = match.group(1).strip() if match.group(1).strip().endswith("Z") else utc_iso(lo)
+                    out["end_utc"] = match.group(2).strip() if match.group(2).strip().endswith("Z") else utc_iso(hi)
+                    absolute = True
+        max_hours = getattr(cfg, "query_max_hours", None)
+        if not absolute and max_hours and isinstance(out.get("hours"), int) and out["hours"] > max_hours:
+            out["hours"] = max_hours
+        if absolute:
+            now = datetime.now(timezone.utc)
+            anchor = self.anchor or {}
+            try:
+                if "start_utc" in out and "end_utc" not in out:
+                    out["end_utc"] = utc_iso(now)
+                elif "end_utc" in out and "start_utc" not in out:
+                    end = utc_time(out["end_utc"])
+                    start = anchor.get("start_utc")
+                    out["start_utc"] = start if start and utc_time(start) < end else utc_iso(end - timedelta(hours=24))
+                end = utc_time(out["end_utc"])
+                if end > now:
+                    out["end_utc"] = utc_iso(now)
+            except (ValueError, TypeError):
+                pass  # leave invalid values for the API layer to report precisely
+        return out
 
     def seed_context(self, incident, alerts, entities):
         for alert in alerts or []:
@@ -175,7 +237,7 @@ class ToolExecutor:
                     "threatintelindicators", "threatintelligenceindicator",
                     "range", "materialize", "toscalar", "externaldata"}
 
-        sources = re.findall(r"(?:^|[;(,=])\s*([A-Za-z][A-Za-z0-9_]*)\s*\|", clean, re.M)
+        sources = re.findall(r"(?:^|[;(=])\s*([A-Za-z][A-Za-z0-9_]*)\s*\|", clean, re.M)
 
         for union in re.findall(r"\bunion\s+([^|;]+)", clean, re.I):
             union = re.sub(r"\bisfuzzy\s*=\s*(?:true|false)", "", union, flags=re.I)
@@ -185,6 +247,9 @@ class ToolExecutor:
                     sources.append(table.group(1))
 
 
+        # Counts, summaries and distinct values are useful context, not raw events.
+        if re.search(r"\b(summarize|count|distinct|make-series|top-hitters)\b", clean, re.I):
+            return False
         local_names = {n.lower() for n in re.findall(r"\blet\s+([A-Za-z][A-Za-z0-9_]*)\s*=", clean, re.I)}
         return any(candidate.lower() not in excluded | local_names for candidate in sources)
 
@@ -253,11 +318,10 @@ class ToolExecutor:
         if problems:
             return {"error": "; ".join(p.message for p in problems[:3])}, None
         s = self.api.settings
-        effective = dict(arguments)
+        effective = self._normalize_kql_args(arguments) if name == "run_kql" else dict(arguments)
 
 
-        if (name == "run_kql" and self.anchor and not
-                has_kql_time_filter(effective["query"]) and not any(
+        if (name == "run_kql" and self.anchor and not any(
                 key in effective for key in ("hours", "start_utc", "end_utc"))):
             effective.update(self.anchor)
 
