@@ -34,6 +34,11 @@ resource "azurerm_container_app_environment" "cae-lz-onze" {
   tags = local.tags
 }
 
+data "azurerm_user_assigned_identity" "onze-build-identity" {
+  name                = "id-onze-build"
+  resource_group_name = data.azurerm_resource_group.SLZ-DeploymentRG.name
+}
+
 data "azurerm_user_assigned_identity" "onze-plan-identity" {
   name                = "id-onze-plan"
   resource_group_name = data.azurerm_resource_group.SLZ-DeploymentRG.name

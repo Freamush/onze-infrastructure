@@ -33,3 +33,5 @@ resource "azurerm_role_assignment" "soc_reader_assignment" {
   role_definition_name = "Reader"
   principal_id         = data.azuread_group.soc_group.object_id
 }
+
+
