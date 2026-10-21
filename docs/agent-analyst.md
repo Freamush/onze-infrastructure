@@ -6,7 +6,7 @@ For me, one of the more interesting questions about Onze was what happens after 
 
 The agent leverages our existing hybrid Onze environment. Events from the on-premises machines and Azure resources go to Log Analytics, while Sentinel handles the detection rules. The Python toolkit makes API-calls to Azure, but the LLM runs locally. To be clear, it mostly looks like this:
 
-`On-premises / Azure resources  Log Analytics Microsoft Sentinel  Python toolkit  local LLM  report`
+`On-premises --> Log Analytics --> Microsoft Sentinel --> Python toolkit --> local LLM`
 
 More on the environment itself is in the [on-premises architecture](ad-infrastructure.md) and [Azure infrastructure](azure-infrastructure.md) documents.
 
