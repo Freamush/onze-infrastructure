@@ -6,12 +6,15 @@ RUN apk upgrade --no-cache && apk add --no-cache python3 ca-certificates
 ENV TF_PLUGIN_CACHE_DIR=/opt/tf-cache
 WORKDIR /opt/provider-warmup
 COPY infra/providers.tf infra/.terraform.lock.hcl ./
+COPY infra/ ./
 RUN mkdir -p "$TF_PLUGIN_CACHE_DIR" \
  && terraform init -backend=false -input=false \
  && rm -rf /opt/provider-warmup
 
 COPY docker/drift/check.py /app/check.py
-RUN adduser -D -u 10001 drift && chmod -R a+rX "$TF_PLUGIN_CACHE_DIR" /app
+RUN adduser -D -u 10001 drift \
+ && chown -R drift "$TF_PLUGIN_CACHE_DIR" \
+ && chmod -R a+rX /app
 
 USER drift
 WORKDIR /home/drift
