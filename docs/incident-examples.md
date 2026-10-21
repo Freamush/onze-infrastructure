@@ -7,11 +7,11 @@ Four tests in the environment to show performance of the agent. Service metadata
 
 On `PC02`, logged in as `m.janssens`, we made several failed authentication attempts against `ONZE\Administrator` on `DC`, just enough to trigger the Sentinel rule:
 
-![Brute-force test](image.png)
+<img width="1135" height="646" alt="Brute Force Test" src="https://github.com/user-attachments/assets/1bd8593a-a2f5-47a3-86b6-0d5424b097be" />
 
 Sentinel generated a **Windows Brute Force** incident:
 
-![Windows Brute Force alert](image-1.png)
+<img width="621" height="901" alt="Windows Brute Force alert" src="https://github.com/user-attachments/assets/c5e51591-2fe5-4b35-a3d5-c342398129d8" />
 
 The agent investigated the incident and returned the following result:
 
@@ -111,11 +111,11 @@ The agent investigated the incident and returned the following result:
 
 On `DC`, we created a new account, `test.user`, with the intention of adding it to an admin group later:
 
-![AD account creation](image-2.png)
+<img width="1137" height="655" alt="Account creation" src="https://github.com/user-attachments/assets/56269ca0-1509-4bf8-8217-e5e6ef8f7555" />
 
 Sentinel generated an **AD Account Lifecycle Changes** incident:
 
-![AD Account Lifecycle Changes alert](image-4.png)
+<img width="2559" height="1234" alt="AD Account Lifecycle Changes alert" src="https://github.com/user-attachments/assets/121de7d7-c9d5-46ab-8041-fd76d559a9f8" />
 
 The agent looked into the account activity:
 
@@ -206,11 +206,11 @@ The agent looked into the account activity:
 
 On `PC02`, we used an elevated shell to create a scheduled task, then executed a process that creates a `.txt` file:
 
-![Scheduled task test](image-5.png)
+<img width="994" height="526" alt="Scheduled task test" src="https://github.com/user-attachments/assets/fc40dee4-3bcd-429b-a1a4-bc4090586227" />
 
 This triggered the **New or Updated Windows Scheduled Task** alert:
 
-![Scheduled task alert](image-6.png)
+<img width="2559" height="1216" alt="Scheduled task alert" src="https://github.com/user-attachments/assets/92b479f9-1643-4a64-afb9-57c9ad043119" />
 
 The agent completed its investigation, although most of the activity it focused on was not directly related to our test task:
 
@@ -316,16 +316,16 @@ The agent completed its investigation, although most of the activity it focused 
 }
 ```
 
-### Example 4 — EICAR test file
+### Example 4 - EICAR test file
 
 On `PC01`, logged in as `j.vermeulen`, we downloaded a `.txt` file containing the EICAR antivirus test string. Windows Defender detected it:
 
-![EICAR test file](image-7.png)
-![Windows Defender detection](image-8.png)
+<img width="2271" height="1356" alt="EICAR test file" src="https://github.com/user-attachments/assets/b4bbd3c4-03e6-4d5e-9bed-6335499c541a" />
+<img width="388" height="246" alt="Windows Defender detection" src="https://github.com/user-attachments/assets/ad54124e-cd98-40b9-94ab-77bea279cf9b" />
 
 Sentinel generated a **Defender Threat or Configuration Change** incident:
 
-![Defender alert](image-9.png)
+<img width="2559" height="1270" alt="Defender alert" src="https://github.com/user-attachments/assets/cb70311e-e13d-45fa-bbfd-4678f434ac08" />
 
 The agent picked up the related events and returned its report:
 
