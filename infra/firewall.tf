@@ -137,7 +137,12 @@ resource "azurerm_firewall_policy_rule_collection_group" "fw-rcg" {
         "${azurerm_log_analytics_workspace.log_space.workspace_id}.ods.opinsights.azure.com",
         "swedencentral-shared.prod.warm.ingest.monitor.core.windows.net",
         "dc.services.visualstudio.com",
-        "*.monitoring.core.windows.net"
+        "*.monitoring.core.windows.net",
+        "github.com",
+        "login.microsoftonline.com",
+        "graph.microsoft.com",
+        "registry.terraform.io",
+        "releases.hashicorp.com",
       ]
       protocols {
         type = "Https"
