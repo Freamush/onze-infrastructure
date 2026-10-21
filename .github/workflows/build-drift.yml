@@ -7,8 +7,9 @@ on:
   workflow_dispatch:
 
 permissions:
-    contents: read
-    id-token: write
+  contents: read
+  id-token: write
+  security-events: write
 
 concurrency:
   group: drift-build
