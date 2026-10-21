@@ -20,3 +20,10 @@ variable "private_zone_ids" {
   default = {}
 }
 
+variable "delegation" {
+  type = object({
+    name    = string
+    actions = list(string)
+  })
+  default = null
+}
