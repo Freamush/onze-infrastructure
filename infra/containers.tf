@@ -1,5 +1,5 @@
 resource "azurerm_container_registry" "acr" {
-  name                = "acr-slz-onze"
+  name                = "acrslzonze"
   resource_group_name = azurerm_resource_group.Secure-Landing-Zone-Apps.name
   location            = azurerm_resource_group.Secure-Landing-Zone-Apps.location
   sku                 = "Basic"
@@ -8,7 +8,7 @@ resource "azurerm_container_registry" "acr" {
 }
 
 resource "azurerm_container_app_environment" "cae-lz-onze" {
-  name                               = "cae-lz-onze"
+  name                               = "caeslzonze"
   resource_group_name                = azurerm_resource_group.Secure-Landing-Zone-Apps.name
   location                           = azurerm_resource_group.Secure-Landing-Zone-Apps.location
   logs_destination                   = "log-analytics"
