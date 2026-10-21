@@ -78,9 +78,9 @@ locals {
 
 locals {
   tags = {
-    project     = "landing-zone"
-    env         = "dev"
-    owner       = "fream"
+    project = "landing-zone"
+    env     = "dev"
+    owner   = "fream"
   }
 }
 
