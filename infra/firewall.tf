@@ -111,7 +111,9 @@ resource "azurerm_firewall_policy_rule_collection_group" "fw-rcg" {
         "dc.services.visualstudio.com",
         "ctldl.windowsupdate.com",
         "*.microsoft.com",
-        "*.digicert.com"
+        "*.digicert.com",
+        "*.windowsupdate.com",
+        "*.windows.com"
       ]
       protocols {
         type = "Https"
