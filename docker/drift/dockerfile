@@ -1,6 +1,6 @@
 FROM hashicorp/terraform:1.12.0
 
-RUN apk add --no-cache python3 ca-certificates
+RUN apk upgrade --no-cache && apk add --no-cache python3 ca-certificates
 
 
 ENV TF_PLUGIN_CACHE_DIR=/opt/tf-cache
