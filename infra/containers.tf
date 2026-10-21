@@ -8,7 +8,7 @@ resource "azurerm_container_registry" "acr" {
   #checkov:skip=CKV_AZURE_165 No need in geo replication policy for non-prod project
   #checkov:skip=CKV_AZURE_163:Images are scanned with Trivy in the build pipeline before push
   #checkov:skip=CKV_AZURE_164:Images are signed and verified with cosign in the build pipeline
-  #checkov:skip=CKV_AZURE_139:Private access requires Premium SKU; access is Entra ID only, admin user disabled
+  #checkov:skip=CKV_AZURE_139:Private access requires Premium SKU; 
   #checkov:skip=CKV_AZURE_166:Quarantine policy requires Premium SKU
   #checkov:skip=CKV_AZURE_167:Retention policy requires Premium SKU
   #checkov:skip=CKV_AZURE_233:Zone redundancy requires Premium SKU
