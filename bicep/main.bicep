@@ -780,7 +780,7 @@ resource alertRules 'Microsoft.SecurityInsights/alertRules@2024-03-01' = [for r 
     {
       displayName: r.name
       description: 'Scheduled behavioral detection. Some categories require additional data connectors.'
-      enabled: enableRules && r.id != 'scheduled-task-security' && r.id != 'agent-heartbeat-missing'
+      enabled: enableRules && r.id != 'agent-heartbeat-missing'
       severity: r.severity
       tactics: [r.tactic]
       techniques: [split(r.technique, '.')[0]]
