@@ -81,8 +81,6 @@ locals {
     project     = "landing-zone"
     env         = "dev"
     owner       = "fream"
-    Service     = "onze-infrastructure"
-    Environment = "Prod"
   }
 }
 
