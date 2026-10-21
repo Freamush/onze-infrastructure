@@ -35,15 +35,32 @@ jobs:
             - name: Build image
               run: docker build -f docker/drift/Dockerfile -t "${{ steps.meta.outputs.ref }}" .
 
-            - name: Run Trivy vulnerability scanner
+            - name: Trivy report (HIGH, CRITICAL)
               uses: aquasecurity/trivy-action@v0.36.0
               with:
-                image-ref: "${{ steps.meta.outputs.ref }}" 
-                format: 'table'
+                image-ref: ${{ steps.meta.outputs.ref }}
+                format: sarif
+                output: trivy.sarif
+                exit-code: '0'
+                ignore-unfixed: true
+                severity: 'CRITICAL,HIGH'
+
+            - name: Upload Trivy report
+              if: always()
+              uses: github/codeql-action/upload-sarif@v3
+              with:
+                sarif_file: trivy.sarif
+                category: drift-checker-image
+
+            - name: Trivy gate (CRITICAL)
+              uses: aquasecurity/trivy-action@v0.36.0
+              with:
+                image-ref: ${{ steps.meta.outputs.ref }}
+                format: table
                 exit-code: '1'
                 ignore-unfixed: true
-                vuln-type: 'os,library'
-                severity: 'CRITICAL,HIGH'
+                severity: 'CRITICAL'
+        
             - name: SBOM (Syft)
               uses: anchore/sbom-action@v0 
               with:
