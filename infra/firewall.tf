@@ -143,6 +143,7 @@ resource "azurerm_firewall_policy_rule_collection_group" "fw-rcg" {
         "graph.microsoft.com",
         "registry.terraform.io",
         "releases.hashicorp.com",
+        "slzsecretvault.vault.azure.net"
       ]
       protocols {
         type = "Https"
