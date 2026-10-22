@@ -22,7 +22,7 @@ Secure hybrid cloud infrastructure for a fictional company **ONZE**, built entir
 - **No exposed VMs**: access only through Azure Bastion, credentials in Key Vault, SSH-key-only login on Linux
 - **Azure Policy**: denies untagged resources and public IPs on network interfaces
 - **Azure Arc**: on-premises servers and workstations onboarded for centralized logging
-- **Azure Container Apps**: Runs a docker container every 30 minutes, looking for terraform drifts in the infrastructure
+- **Drift detection:** a signed container in Azure Container Apps runs a read-only terraform plan every 30 minutes and alerts on any manual change made outside the pipeline
 
 ### On-premises
 - **Hardened Active Directory**: GPOs for audit policy, PowerShell script block logging and Defender ASR rules
@@ -50,6 +50,7 @@ Secure hybrid cloud infrastructure for a fictional company **ONZE**, built entir
 - [On-Prem Architecture](docs/ad-infrastructure.md): Active Directory, Sentinel, Qwen 3.5 9B
 - [Cloud Architecture](docs/azure-infrastructure.md): machines, network, firewall, backups, identity
 - [CI/CD](docs/gitactions-pipeline.md): pull request workflow and pipeline checks, deployment with OIDC
+- [Drift detection](docs/drift-detection.md): drift checker in Container Apps, image supply chain, alerts
 - [AI Analyst Agent](docs/agent-analyst.md) how the agent investigates Sentinel incidents
 - [Incident Examples](docs/incident-examples.md) attack cases in the lab and how they were detected and investigated
 
