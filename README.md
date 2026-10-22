@@ -10,9 +10,10 @@ Secure hybrid cloud infrastructure for a fictional company **ONZE**, built entir
 .
 ├── bicep/       #Sentinel rules in policy as code with bicep
 ├── analyst-agent/      # Self-hosted AI analyst for Sentinel incidents (Python)
+├── docker/      # Dockerfile for drift detection
 ├── infra/          # Terraform files with modules (spoke, dcr...)
 ├── docs/       # Detailed architecture documentation
-└── .github/workflows # CI pipelines
+└── .github/workflows # CI/CD pipelines
 ```
 ## Highlights
 
