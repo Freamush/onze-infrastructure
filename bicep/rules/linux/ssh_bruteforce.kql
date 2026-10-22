@@ -1,0 +1,10 @@
+// T1110.001
+Syslog
+| where TimeGenerated > ago(15m)
+| where ProcessName =~ 'sshd' or SyslogMessage contains 'sshd'
+| where SyslogMessage contains 'Failed password'
+| extend SourceIP=extract(@'from\s+([0-9a-fA-F\.:]+)',1,SyslogMessage),
+         Account=extract(@'Failed password for (?:invalid user )?(\S+)',1,SyslogMessage)
+| where isnotempty(SourceIP)
+| summarize Failures=count(), Accounts=make_set(Account,20), TimeGenerated=max(TimeGenerated) by Computer,SourceIP
+| where Failures >= 8

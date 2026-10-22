@@ -1,0 +1,17 @@
+// T1558.004
+let W = union isfuzzy=true
+    (SecurityEvent
+     | where TimeGenerated > ago(15m) and EventID in (4768)
+     | project TimeGenerated, Computer, EventID, Raw=tostring(EventData), M=pack_all()),
+    (Event
+     | where TimeGenerated > ago(15m) and EventLog =~ 'Security' and EventID in (4768)
+     | project TimeGenerated, Computer, EventID, Raw=tostring(EventData), M=pack_all());
+W
+| extend
+    TargetUserName=coalesce(tostring(M.TargetUserName), extract(@'<Data Name="TargetUserName">([^<]*)', 1, Raw)),
+    IpAddress=coalesce(tostring(M.IpAddress), tostring(M.ClientAddress), extract(@'<Data Name="IpAddress">([^<]*)', 1, Raw), extract(@'<Data Name="ClientAddress">([^<]*)', 1, Raw)),
+    PreAuth=coalesce(tostring(M.PreAuthType), extract(@'<Data Name="PreAuthType">([^<]*)', 1, Raw)),
+    Result=coalesce(tostring(M.Status), extract(@'<Data Name="Status">([^<]*)', 1, Raw))
+| where PreAuth in ('0','0x0') and Result in~ ('0','0x0')
+| where isnotempty(TargetUserName) and TargetUserName !endswith '$'
+| project TimeGenerated, Computer, IpAddress, TargetUserName, PreAuth, Result

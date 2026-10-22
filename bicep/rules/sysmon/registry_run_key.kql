@@ -1,0 +1,13 @@
+// T1547.001
+let S = Event
+| where TimeGenerated > ago(15m) and EventID in (13)
+| where Source =~ 'Microsoft-Windows-Sysmon'
+| extend X=parse_xml(EventData).DataItem.EventData.Data
+| mv-expand X
+| extend Key=tostring(X['@Name']), Value=tostring(X['#text'])
+| summarize F=make_bag(pack(Key,Value)) by TimeGenerated, Computer, EventID, EventData;
+S
+| extend Image=tostring(F.Image), TargetObject=tostring(F.TargetObject), Details=tostring(F.Details)
+| where TargetObject contains @'\CurrentVersion\Run\' or TargetObject contains @'\CurrentVersion\RunOnce\'
+    or TargetObject contains @'\Winlogon\Shell' or TargetObject contains @'\Winlogon\Userinit'
+| project TimeGenerated, Computer, Image, TargetObject, Details

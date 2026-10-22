@@ -1,0 +1,15 @@
+// T1136.002
+let W = union isfuzzy=true
+    (SecurityEvent
+     | where TimeGenerated > ago(15m) and EventID in (4720,4722,4724,4726,4738)
+     | project TimeGenerated, Computer, EventID, Raw=tostring(EventData), M=pack_all()),
+    (Event
+     | where TimeGenerated > ago(15m) and EventLog =~ 'Security' and EventID in (4720,4722,4724,4726,4738)
+     | project TimeGenerated, Computer, EventID, Raw=tostring(EventData), M=pack_all());
+W
+| extend
+    TargetUserName=coalesce(tostring(M.TargetUserName), extract(@'<Data Name="TargetUserName">([^<]*)', 1, Raw)),
+    SubjectUserName=coalesce(tostring(M.SubjectUserName), extract(@'<Data Name="SubjectUserName">([^<]*)', 1, Raw))
+| extend Action=case(EventID==4720,'Created',EventID==4722,'Enabled',EventID==4724,'Password reset attempted',
+                      EventID==4726,'Deleted',EventID==4738,'Account changed','Other')
+| project TimeGenerated, Computer, EventID, Action, TargetUserName, SubjectUserName

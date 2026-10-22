@@ -1,0 +1,15 @@
+// T1567.002
+let S = Event
+| where TimeGenerated > ago(15m) and EventID in (1)
+| where Source =~ 'Microsoft-Windows-Sysmon'
+| extend X=parse_xml(EventData).DataItem.EventData.Data
+| mv-expand X
+| extend Key=tostring(X['@Name']), Value=tostring(X['#text'])
+| summarize F=make_bag(pack(Key,Value)) by TimeGenerated, Computer, EventID, EventData;
+S
+| extend Image=tostring(F.Image), Cmd=tostring(F.CommandLine), User=tostring(F.User)
+| where (Image matches regex @'(?i)(\\(rclone|winscp|megacmd|azcopy)\.exe$|\\winscp\.com$)'
+    and (Cmd contains 'copy' or Cmd contains 'sync' or Cmd contains 'put' or Cmd contains 'upload'))
+    or (Image matches regex @'(?i)\\curl\.exe$' and (Cmd contains '--upload-file' or Cmd contains ' -T '))
+    or (Image matches regex @'(?i)\\(powershell|pwsh)\.exe$' and Cmd contains '-Method Put')
+| project TimeGenerated, Computer, User, Image, Cmd

@@ -1,0 +1,8 @@
+// T1548.003
+Syslog
+| where TimeGenerated > ago(15m)
+| where ProcessName =~ 'sudo' or SyslogMessage contains 'COMMAND='
+| where SyslogMessage contains 'COMMAND='
+| where SyslogMessage matches regex @'(?i)COMMAND=.*\b(useradd|usermod|gpasswd|visudo|chpasswd|auditctl|setenforce)\b'
+    or (SyslogMessage contains 'COMMAND=' and SyslogMessage contains 'firewall-cmd' and SyslogMessage contains '--permanent')
+| project TimeGenerated, Computer, ProcessName, SyslogMessage

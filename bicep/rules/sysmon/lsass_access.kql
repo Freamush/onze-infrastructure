@@ -1,0 +1,15 @@
+// T1003.001
+let S = Event
+| where TimeGenerated > ago(15m) and EventID in (10)
+| where Source =~ 'Microsoft-Windows-Sysmon'
+| extend X=parse_xml(EventData).DataItem.EventData.Data
+| mv-expand X
+| extend Key=tostring(X['@Name']), Value=tostring(X['#text'])
+| summarize F=make_bag(pack(Key,Value)) by TimeGenerated, Computer, EventID, EventData;
+S
+| extend SourceImage=tostring(F.SourceImage), TargetImage=tostring(F.TargetImage), GrantedAccess=tostring(F.GrantedAccess), User=tostring(F.User)
+| where TargetImage endswith @'\lsass.exe' and isnotempty(SourceImage)
+| where SourceImage !endswith @'\MsMpEng.exe'
+| where GrantedAccess in~ ('0x1fffff','0x1f0fff','0x1410','0x1438','0x1010','0x1f3fff','0x1f2fff')
+    or SourceImage matches regex @'(?i)\\(procdump|mimikatz|rundll32|nanodump|dumpert)\.exe$'
+| project TimeGenerated, Computer, SourceImage, TargetImage, GrantedAccess, User

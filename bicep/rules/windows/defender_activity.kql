@@ -1,0 +1,6 @@
+// T1562.001
+Event
+| where TimeGenerated > ago(15m) and EventID in (1116,1117,5007)
+| where EventLog =~ 'Microsoft-Windows-Windows Defender/Operational'
+| extend Action=case(EventID==1116,'Malware detected',EventID==1117,'Remediation', 'Defender configuration changed')
+| project TimeGenerated, Computer, EventID, Action, RenderedDescription

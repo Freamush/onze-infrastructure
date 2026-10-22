@@ -1,0 +1,13 @@
+// T1070.001
+let W = union isfuzzy=true
+    (SecurityEvent
+     | where TimeGenerated > ago(15m) and EventID in (1102,4719)
+     | project TimeGenerated, Computer, EventID, Raw=tostring(EventData), M=pack_all()),
+    (Event
+     | where TimeGenerated > ago(15m) and EventLog =~ 'Security' and EventID in (1102,4719)
+     | project TimeGenerated, Computer, EventID, Raw=tostring(EventData), M=pack_all());
+W
+| extend
+    SubjectUserName=coalesce(tostring(M.SubjectUserName), extract(@'<Data Name="SubjectUserName">([^<]*)', 1, Raw))
+| extend Action=iff(EventID==1102,'Security log cleared','Audit policy changed')
+| project TimeGenerated, Computer, EventID, Action, SubjectUserName, Raw

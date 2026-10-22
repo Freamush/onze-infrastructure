@@ -1,0 +1,8 @@
+// T1098.001
+AuditLogs
+| where TimeGenerated > ago(15m)
+| where Result =~ 'success'
+| where ActivityDisplayName contains 'Consent to application'
+    or ActivityDisplayName contains 'delegated permission grant'
+    or ActivityDisplayName contains 'app role assignment to service principal'
+| project TimeGenerated, ActivityDisplayName, InitiatedBy, TargetResources, Result

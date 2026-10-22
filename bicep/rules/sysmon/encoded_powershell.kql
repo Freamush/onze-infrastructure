@@ -1,0 +1,15 @@
+// T1059.001
+let S = Event
+| where TimeGenerated > ago(15m) and EventID in (1)
+| where Source =~ 'Microsoft-Windows-Sysmon'
+| extend X=parse_xml(EventData).DataItem.EventData.Data
+| mv-expand X
+| extend Key=tostring(X['@Name']), Value=tostring(X['#text'])
+| summarize F=make_bag(pack(Key,Value)) by TimeGenerated, Computer, EventID, EventData;
+S
+| extend Image=tostring(F.Image), Cmd=tostring(F.CommandLine), Parent=tostring(F.ParentImage), Account=tostring(F.User)
+| where Image matches regex @'(?i)\\(powershell|pwsh)\.exe$'
+| where Cmd matches regex @'(?i)(^|\s)-(enc|encodedcommand|e)\s+\S{12,}'
+    or Cmd contains 'DownloadString' or Cmd contains 'FromBase64String'
+    or Cmd contains 'Invoke-Expression' or Cmd contains 'IEX('
+| project TimeGenerated, Computer, Account, Image, Cmd, Parent
