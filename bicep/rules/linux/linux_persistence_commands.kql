@@ -1,0 +1,9 @@
+// T1053.003
+Syslog
+| where TimeGenerated > ago(15m)
+| where ProcessName =~ 'sudo' or SyslogMessage contains 'COMMAND='
+| where SyslogMessage contains 'COMMAND='
+| where SyslogMessage matches regex @'(?i)COMMAND=.*\b(crontab|systemctl)\b'
+| where SyslogMessage contains 'crontab' or (SyslogMessage contains 'systemctl' and (SyslogMessage contains 'enable' or SyslogMessage contains 'link'))
+    or SyslogMessage contains '/etc/cron.d/' or SyslogMessage contains '/etc/systemd/system/'
+| project TimeGenerated, Computer, ProcessName, SyslogMessage

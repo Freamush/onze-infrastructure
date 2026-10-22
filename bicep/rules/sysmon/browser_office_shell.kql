@@ -1,0 +1,13 @@
+// T1204.002
+let S = Event
+| where TimeGenerated > ago(15m) and EventID in (1)
+| where Source =~ 'Microsoft-Windows-Sysmon'
+| extend X=parse_xml(EventData).DataItem.EventData.Data
+| mv-expand X
+| extend Key=tostring(X['@Name']), Value=tostring(X['#text'])
+| summarize F=make_bag(pack(Key,Value)) by TimeGenerated, Computer, EventID, EventData;
+S
+| extend Image=tostring(F.Image), Parent=tostring(F.ParentImage), Cmd=tostring(F.CommandLine), Account=tostring(F.User)
+| where Parent matches regex @'(?i)\\(winword|excel|outlook|powerpnt|chrome|msedge|firefox|w3wp|php-cgi|php)\.exe$'
+| where Image matches regex @'(?i)\\(cmd|powershell|pwsh|mshta|wscript|cscript|rundll32)\.exe$'
+| project TimeGenerated, Computer, Account, Parent, Image, Cmd

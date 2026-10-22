@@ -1,0 +1,16 @@
+// T1071.004
+let S = Event
+| where TimeGenerated > ago(15m) and EventID in (22)
+| where Source =~ 'Microsoft-Windows-Sysmon'
+| extend X=parse_xml(EventData).DataItem.EventData.Data
+| mv-expand X
+| extend Key=tostring(X['@Name']), Value=tostring(X['#text'])
+| summarize F=make_bag(pack(Key,Value)) by TimeGenerated, Computer, EventID, EventData;
+S
+| extend QueryName=tostring(F.QueryName), Image=tostring(F.Image), User=tostring(F.User)
+| where strlen(QueryName) >= 80 and QueryName contains '.'
+| extend Prefix=tostring(split(QueryName,'.')[0]), DomainSuffix=extract(@'([^.]+\.[^.]+)\.?$',1,QueryName)
+| where strlen(Prefix) >= 35
+| summarize LongQueries=count(), UniqueQueries=dcount(QueryName), Samples=make_set(QueryName,5), TimeGenerated=max(TimeGenerated)
+    by Computer, Image, User, DomainSuffix
+| where LongQueries >= 5 and UniqueQueries >= 5

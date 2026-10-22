@@ -1,0 +1,6 @@
+// T1566.001
+EmailEvents
+| where TimeGenerated > ago(15m)
+| where DeliveryAction =~ 'Delivered'
+| where ThreatTypes has_any ('Phish','Malware')
+| project TimeGenerated, RecipientEmailAddress, SenderFromAddress, Subject, ThreatTypes, DeliveryAction, NetworkMessageId

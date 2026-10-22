@@ -1,0 +1,24 @@
+// T1071.001
+let S = Event
+| where TimeGenerated > ago(1h) and EventID in (3)
+| where Source =~ 'Microsoft-Windows-Sysmon'
+| extend X=parse_xml(EventData).DataItem.EventData.Data
+| mv-expand X
+| extend Key=tostring(X['@Name']), Value=tostring(X['#text'])
+| summarize F=make_bag(pack(Key,Value)) by TimeGenerated, Computer, EventID, EventData;
+S
+| extend DstIP=tostring(F.DestinationIp), Port=toint(F.DestinationPort), Image=tostring(F.Image), Initiated=tostring(F.Initiated)
+| where Initiated =~ 'true' and ipv4_is_private(DstIP) == false and isnotempty(DstIP)
+| where Port in (80,443,8080,8443)
+| project TimeGenerated, Computer, Image, DstIP, Port
+| sort by Computer asc, Image asc, DstIP asc, Port asc, TimeGenerated asc
+| serialize
+| extend Key=strcat(Computer,'|',Image,'|',DstIP,'|',tostring(Port))
+| extend PreviousKey=prev(Key), PreviousTime=prev(TimeGenerated)
+| extend GapSeconds=iff(Key == PreviousKey, datetime_diff('second',TimeGenerated,PreviousTime),long(null))
+| where isnotnull(GapSeconds) and GapSeconds > 0
+| summarize Samples=count(), AvgGap=avg(GapSeconds), GapStdDev=stdev(GapSeconds), TimeGenerated=max(TimeGenerated)
+    by Computer, Image, DstIP, Port
+| where Samples >= 6 and AvgGap between (30.0 .. 900.0)
+| where isnotnull(GapStdDev) and GapStdDev / AvgGap <= 0.20
+| where TimeGenerated > ago(15m)

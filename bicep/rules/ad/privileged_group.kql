@@ -1,0 +1,19 @@
+// T1098.007
+let W = union isfuzzy=true
+    (SecurityEvent
+     | where TimeGenerated > ago(15m) and EventID in (4728,4729,4732,4733,4756,4757)
+     | project TimeGenerated, Computer, EventID, Raw=tostring(EventData), M=pack_all()),
+    (Event
+     | where TimeGenerated > ago(15m) and EventLog =~ 'Security' and EventID in (4728,4729,4732,4733,4756,4757)
+     | project TimeGenerated, Computer, EventID, Raw=tostring(EventData), M=pack_all());
+W
+| extend
+    GroupName=coalesce(tostring(M.TargetUserName), extract(@'<Data Name="TargetUserName">([^<]*)', 1, Raw)),
+    TargetSid=coalesce(tostring(M.TargetSid), extract(@'<Data Name="TargetSid">([^<]*)', 1, Raw)),
+    ModifiedBy=coalesce(tostring(M.SubjectUserName), extract(@'<Data Name="SubjectUserName">([^<]*)', 1, Raw)),
+    AddedMember=coalesce(tostring(M.MemberName), extract(@'<Data Name="MemberName">([^<]*)', 1, Raw))
+| where GroupName in~ ('Domain Admins','Enterprise Admins','Schema Admins','Administrators','GG-Workstation-Admins')
+    or TargetSid =~ 'S-1-5-32-544'
+    or TargetSid matches regex @'-(512|518|519)$'
+| extend Action=iff(EventID in (4728,4732,4756),'Member added','Member removed')
+| project TimeGenerated, Computer, EventID, Action, GroupName, TargetSid, AddedMember, ModifiedBy

@@ -1,0 +1,16 @@
+// T1486
+let S = Event
+| where TimeGenerated > ago(15m) and EventID in (11)
+| where Source =~ 'Microsoft-Windows-Sysmon'
+| extend X=parse_xml(EventData).DataItem.EventData.Data
+| mv-expand X
+| extend Key=tostring(X['@Name']), Value=tostring(X['#text'])
+| summarize F=make_bag(pack(Key,Value)) by TimeGenerated, Computer, EventID, EventData;
+S
+| extend Image=tostring(F.Image), Target=tostring(F.TargetFilename)
+| where Target contains @'\Users\'
+| where Target contains @'\Desktop\' or Target contains @'\Documents\' or Target contains @'\Pictures\'
+| where Image !endswith @'\MsMpEng.exe'
+| summarize FileCreates=count(), SampleFiles=make_set(Target,7), TimeGenerated=max(TimeGenerated)
+    by Computer, Image
+| where FileCreates >= 150

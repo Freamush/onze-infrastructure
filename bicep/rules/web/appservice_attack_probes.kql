@@ -1,0 +1,10 @@
+// T1190
+AppServiceHTTPLogs
+| where TimeGenerated > ago(15m)
+| extend Request=tolower(strcat(tostring(CsUriStem),'?',tostring(CsUriQuery)))
+| where Request contains '../' or Request contains '%2e%2e' or Request contains '/.env'
+    or Request contains '/wp-admin' or Request contains 'union%20select'
+    or Request contains 'sleep%28' or Request contains '/etc/passwd' or Request contains 'cmd='
+| where isnotempty(CIp)
+| summarize Hits=count(), Paths=make_set(Request,10), TimeGenerated=max(TimeGenerated) by CIp, _ResourceId
+| where Hits >= 2

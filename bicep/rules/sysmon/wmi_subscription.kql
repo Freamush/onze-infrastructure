@@ -1,0 +1,11 @@
+// T1546.003
+let S = Event
+| where TimeGenerated > ago(15m) and EventID in (19,20,21)
+| where Source =~ 'Microsoft-Windows-Sysmon'
+| extend X=parse_xml(EventData).DataItem.EventData.Data
+| mv-expand X
+| extend Key=tostring(X['@Name']), Value=tostring(X['#text'])
+| summarize F=make_bag(pack(Key,Value)) by TimeGenerated, Computer, EventID, EventData;
+S
+| extend EventNamespace=tostring(F.EventNamespace), Name=tostring(F.Name), Operation=tostring(F.Operation), Consumer=tostring(F.Consumer)
+| project TimeGenerated, Computer, EventID, EventNamespace, Name, Consumer, Operation, EventData

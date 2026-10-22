@@ -1,0 +1,9 @@
+// T1059.001
+Event
+| where TimeGenerated > ago(15m) and EventID == 4104
+| where EventLog contains 'PowerShell' or Source contains 'PowerShell'
+| extend Script=tostring(coalesce(RenderedDescription,Message,EventData))
+| where Script contains 'Invoke-Expression' or Script contains 'FromBase64String'
+    or Script contains 'DownloadString' or Script contains 'AmsiUtils'
+    or Script contains 'Reflection.Assembly' or Script contains 'Add-MpPreference'
+| project TimeGenerated, Computer, EventID, Script
