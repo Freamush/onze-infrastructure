@@ -28,9 +28,13 @@ Terraform variables are passed to the job by Terraform itself during deployment,
 
 ### Image supply chain
 **Trivy**: critical vulnerabilities block the build before anything is pushed; all high and critical findings are tracked in GitHub code scanning.
+
 **SBOM** (SPDX) attached to every image.
-**cosign keyless** signature, verified before deployment.
+
+**Сosign keyless** signature, verified before deployment.
+
 **Deployment by digest:** the job runs exactly the image that was scanned and signed.
+
 **Hardened image:** official Terraform base, non-root user, provider plugins cached at build time.
 
 ### Network
