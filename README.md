@@ -22,6 +22,7 @@ Secure hybrid cloud infrastructure for a fictional company **ONZE**, built entir
 - **No exposed VMs**: access only through Azure Bastion, credentials in Key Vault, SSH-key-only login on Linux
 - **Azure Policy**: denies untagged resources and public IPs on network interfaces
 - **Azure Arc**: on-premises servers and workstations onboarded for centralized logging
+- **Azure Container Apps**: Runs a docker container every 30 minutes, looking for terraform drifts in the infrastructure
 
 ### On-premises
 - **Hardened Active Directory**: GPOs for audit policy, PowerShell script block logging and Defender ASR rules
