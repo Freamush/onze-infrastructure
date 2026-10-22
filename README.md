@@ -28,7 +28,7 @@ Secure hybrid cloud infrastructure for a fictional company **ONZE**, built entir
 ### On-premises
 - **Hardened Active Directory**: GPOs for audit policy, PowerShell script block logging and Defender ASR rules
 - **OPNsense perimeter**: firewall and router controlling LAN access and outbound traffic
-- **Hybrid identity**: AD users and groups synced to Entra ID with Entra Connect; RBAC on synced groups gives `GG-IT` sign-in to cloud VMs and `SOC-TEAM` access to Sentinel
+- **Hybrid identity**: AD users and groups synced to Entra ID with Entra Connect; RBAC on synced groups gives `GG-IT` sign-in to cloud VMs
 
 ### Security operations
 - **Centralized SIEM**: Azure VMs, Arc machines, firewall and storage logs in one Log Analytics workspace with Microsoft Sentinel
