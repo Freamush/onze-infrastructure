@@ -18,7 +18,8 @@ flowchart LR
 **Alerts. **Two Azure Monitor rule watch the job logs in Log Analytics: one for detected drift. It notifies the existing action group by email and stay muted for 6 hours after firing.
 **build-drift.yml:** image pipeline. Rebuilds the container when the checker or the Terraform providers change.
 
-<img width="1810" height="591" alt="image" src="https://github.com/user-attachments/assets/4f9e9cef-f593-4507-bdb3-c5d0b3613261" />
+<img width="753" height="525" alt="image" src="https://github.com/user-attachments/assets/c4f9d103-1e1e-4383-a5ac-5d55579a5404" />
+
 
 ### Secretless authentication and least privilege
 The job runs as `id-onze-plan`, the same read-only identity used for pull request plans. It can detect drift but cannot change anything.
