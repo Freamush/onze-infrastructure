@@ -39,6 +39,8 @@ The pipeline uses two user-assigned managed identities with **OIDC federated cre
 
 > **Note:** In a team environment, branch protection on `main` would also require approval from a second reviewer before merging.
 
+<img width="1280" height="437" alt="image" src="https://github.com/user-attachments/assets/a5774e8d-e475-4533-b2a1-4bd3cd1fda16" />
+
 ### Notifications
 When the apply job finishes, the pipeline sends an email with the result (success or failure), the commit, who triggered the deployment and a link to the workflow run. Emails are sent through **Azure Communication Services** from a custom verified domain (`notify.onze.riseofforce.net`) with SPF and DKIM configured, so they are delivered reliably instead of landing in spam.
 
