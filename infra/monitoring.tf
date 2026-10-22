@@ -92,6 +92,35 @@ resource "azurerm_monitor_scheduled_query_rules_alert_v2" "alert1" {
   tags = local.tags
 }
 
+
+resource "azurerm_monitor_scheduled_query_rules_alert_v2" "alert2" {
+  name                              = "DRIFT_DETECTED"
+  location                          = azurerm_resource_group.Secure-Landing-Zone-Monitor.location
+  resource_group_name               = azurerm_resource_group.Secure-Landing-Zone-Monitor.name
+  scopes                            = [azurerm_log_analytics_workspace.log_space.id]
+  severity                          = 2
+  evaluation_frequency              = "PT15M"
+  window_duration                   = "PT30M"
+  mute_actions_after_alert_duration = "PT6H"
+  display_name = "ONZE infrastructure drift detected"
+  description  = "Azure resources no longer match the Terraform code on main. Check the caj-onze-drift job logs."
+  criteria {
+    query                   = <<-QUERY
+      ContainerAppConsoleLogs_CL
+      | where ContainerJobName_s == "caj-onze-drift"
+      | where Log_s has "DRIFT_DETECTED"
+      QUERY
+    time_aggregation_method = "Count"
+    threshold               = 0
+    operator                = "GreaterThan"
+  }
+  action {
+    action_groups = [azurerm_monitor_action_group.action_group.id]
+  }
+  tags = local.tags
+}
+
+
 locals {
   windows_machines = {
     "vm-spoke3" = azurerm_windows_virtual_machine.vm_spoke3.id
