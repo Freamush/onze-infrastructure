@@ -102,8 +102,8 @@ resource "azurerm_monitor_scheduled_query_rules_alert_v2" "alert2" {
   evaluation_frequency              = "PT15M"
   window_duration                   = "PT30M"
   mute_actions_after_alert_duration = "PT6H"
-  display_name = "ONZE infrastructure drift detected"
-  description  = "Azure resources no longer match the Terraform code on main. Check the caj-onze-drift job logs."
+  display_name                      = "ONZE infrastructure drift detected"
+  description                       = "Azure resources no longer match the Terraform code on main. Check the caj-onze-drift job logs."
   criteria {
     query                   = <<-QUERY
       ContainerAppConsoleLogs_CL
